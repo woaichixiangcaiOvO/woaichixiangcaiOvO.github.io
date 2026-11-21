@@ -62,6 +62,8 @@ async function buildCase(id) {
 }
 
 await Promise.all([...vendors.map(copyVendor), buildCase('yingyu'), buildCase('bounce')]);
+await writeOutput('.nojekyll','');
+await writeOutput('release.json',JSON.stringify({site:'OvO',commit:process.env.GITHUB_SHA??null,builtAt:new Date().toISOString()},null,2));
 console.log('Built the portfolio in dist/.');
 
 // Precompressed sidecars keep the static distribution portable (including Pages).
