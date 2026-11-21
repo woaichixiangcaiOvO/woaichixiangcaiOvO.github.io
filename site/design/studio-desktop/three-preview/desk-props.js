@@ -14,8 +14,8 @@ const propDefinitions = [
     speed: .112, mass: .13, heading: [-.37, .78, .50], phase: 0,
   },
   { name: 'Desk_Sticky_Prop', parts: ['Prop_StickyNotes'], speed: .085, mass: .06, heading: [-.57, .75, .35], phase: 1.4 },
-  { name: 'Desk_Notebook_Prop', parts: ['Prop_Notebook'], speed: .091, mass: .19, heading: [.4, .9, -.21], phase: 2.6 },
-  { name: 'Desk_Pencil_Prop', parts: ['Prop_Pencil'], speed: .102, mass: .044, heading: [.3, .56, .78], phase: 3.8 },
+  { name: 'Desk_Notebook_Prop', parts: ['Prop_Notebook'], speed: .091, mass: .19, heading: [.4, .9, -.21], phase: 2.6, checkOverlap: true },
+  { name: 'Desk_Pencil_Prop', parts: ['Prop_Pencil'], speed: .102, mass: .044, heading: [.3, .56, .78], phase: 3.8, checkOverlap: true },
 ];
 const solidFurniture = [
   /^Desk_(?:Main_Ash_Top|Leather_Mat|Left_Cabinet|Right_(?:Foot|FrameLeg)|Underframe)/,
@@ -169,6 +169,7 @@ function makeProp(definition, parts, parent, world, rapier, matHeight, shadowMap
   parent.add(shadow);
   return {
     body, collider, model, shadow, half, home: resting, speed: definition.speed, phase: definition.phase,
+    checkOverlap: definition.checkOverlap,
     initialHeading: new Vector3(...definition.heading).normalize(),
     heading: new Vector3(...definition.heading).normalize(),
     spinAxis: new Vector3(Math.cos(definition.phase) < 0 ? -.55 : .55, .8,
@@ -213,6 +214,7 @@ export async function createDeskProps(room, canvas, camera) {
   const shadowMap = shadowTexture();
   const props = propDefinitions.map((definition, index) =>
     makeProp(definition, propParts[index], room.parent, world, rapier, matHeight, shadowMap));
+  const thinProps = props.filter(prop => prop.checkOverlap);
   const models = props.map(({ model }) => model);
   const propByMesh = new WeakMap();
   for (const prop of props) {
@@ -408,6 +410,36 @@ export async function createDeskProps(room, canvas, camera) {
     shadow.scale.setScalar(1 + .48 * rise);
   }
 
+  const contactPosition = new Vector3();
+  function resolveThinPropOverlap({ body, collider }) {
+    if (body.isSleeping()) return;
+    contactPosition.copy(body.translation());
+    rotation.copy(body.rotation());
+    const shape = collider.shape;
+    velocity.copy(body.linvel());
+    let corrected = false;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      let overlap;
+      world.intersectionsWithShape(contactPosition, rotation, shape, other => {
+        const contact = other.contactShape(shape, contactPosition, rotation, 0);
+        if (contact && contact.distance < (overlap?.distance ?? -.001)) overlap = contact;
+        return true;
+      }, undefined, undefined, collider);
+      if (!overlap) break;
+      // CCD handles travel. Resolve residual contact from the new orientation and moving shelves.
+      const normal = overlap.normal1;
+      contactPosition.addScaledVector(normal, .002 - overlap.distance);
+      const intoSurface = velocity.dot(normal);
+      if (intoSurface < 0) velocity.addScaledVector(normal, -intoSurface);
+      corrected = true;
+    }
+    if (corrected) {
+      body.setTranslation(contactPosition, true);
+      body.setLinvel(velocity, true);
+      world.propagateModifiedBodyPositionsToColliders();
+    }
+  }
+
   function advance(deltaMs) {
     const furnitureMoved = movingColliders.some(({ mesh, y, offset }) => Math.abs(mesh.position.y - y - offset) > .00001);
     if (orbit && !driftEnabled && !grab) return false;
@@ -448,6 +480,7 @@ export async function createDeskProps(room, canvas, camera) {
         }
       }
       world.step();
+      for (const prop of thinProps) resolveThinPropOverlap(prop);
     }
     if (furnitureMoved && steps) {
       for (const item of movingColliders) item.offset = item.body.translation().y;
