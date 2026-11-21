@@ -71,13 +71,15 @@ function signTexture() {
   canvas.width = 768;
   canvas.height = 544;
   const context = canvas.getContext('2d');
-  context.fillStyle = '#eee6d7';
+  context.fillStyle = '#e1e8dc';
   context.fillRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#2d241d';
-  context.font = '700 128px "Microsoft YaHei", sans-serif';
+  context.font = '600 164px Georgia, serif';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.fillText(window.ovoPrefs.language==='en'?'← Works':'← 作品', canvas.width / 2, canvas.height / 2);
+  context.fillText('OvO', canvas.width / 2, canvas.height / 2-32);
+  context.font = '500 43px "Microsoft YaHei", sans-serif';
+  context.fillText(window.ovoPrefs.language==='en'?'About me':'关于我',canvas.width/2,canvas.height/2+102);
   return screenTexture(canvas);
 }
 
@@ -127,7 +129,7 @@ function convexHull(points) {
   return [...edge(sorted), ...edge(sorted.reverse())];
 }
 
-export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree) {
+export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree, placeProfile = () => {}) {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setClearColor(warmBackground);
   renderer.toneMapping = ACESFilmicToneMapping;
@@ -195,6 +197,15 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     [screenBounds.min.x, screenBounds.max.y], [screenBounds.max.x, screenBounds.max.y],
     [screenBounds.max.x, screenBounds.min.y], [screenBounds.min.x, screenBounds.min.y],
   ].map(([x, y]) => mainScreen.localToWorld(new Vector3(x, y, localCenter.z)));
+  tabletScreen.geometry.computeBoundingBox();
+  const tabletBounds=tabletScreen.geometry.boundingBox;
+  const tabletLocal=tabletBounds.getCenter(new Vector3());
+  const tabletCenter=tabletScreen.localToWorld(tabletLocal.clone());
+  const tabletSize=tabletBounds.getSize(new Vector3()).multiply(tabletScreen.getWorldScale(new Vector3()));
+  const tabletRotation=tabletScreen.getWorldQuaternion(new Quaternion());
+  const tabletNormal=new Vector3(0,0,1).applyQuaternion(tabletRotation);
+  const tabletUp=new Vector3(0,1,0).applyQuaternion(tabletRotation);
+  const tabletCorners=[[tabletBounds.min.x,tabletBounds.max.y],[tabletBounds.max.x,tabletBounds.max.y],[tabletBounds.max.x,tabletBounds.min.y],[tabletBounds.min.x,tabletBounds.min.y]].map(([x,y])=>tabletScreen.localToWorld(new Vector3(x,y,tabletLocal.z)));
   // Use the visible outer parts of the actual model for the projected hover outline.
   const projectorSurfaces = projector.children
     .filter(object => object.isMesh && /^Projector_(Body|Brass_Panel|Pedestal|Lens_|Reel_Rim|Reel_Support)/.test(object.name))
@@ -232,6 +243,8 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   const overviewFromLamp = overview.position.clone().sub(lampCenter);
   const up = new Vector3(0, 1, 0);
   const desktop = { position: new Vector3(), target: screenCenter, fov: 38 };
+  const profileView={position:new Vector3(),target:tabletCenter,fov:38};
+  let focusKind='desktop';
   const gaze = new Vector3();
   const point = new Vector3();
   const offColor = mainScreen.material.color.clone();
@@ -256,9 +269,11 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     if (!arrival) {
       if (camera.view?.enabled) camera.clearViewOffset();
       camera.near = overviewNear;
-      camera.position.lerpVectors(overview.position, desktop.position, travel);
-      camera.fov = MathUtils.lerp(overview.fov, desktop.fov, travel);
-      camera.lookAt(gaze.lerpVectors(overview.target, desktop.target, MathUtils.smoothstep(travel, 0, .9)));
+      const destination=focusKind==='profile'?profileView:desktop;
+      camera.position.lerpVectors(overview.position, destination.position, travel);
+      camera.fov = MathUtils.lerp(overview.fov, destination.fov, travel);
+      camera.up.copy(up).lerp(focusKind==='profile'?tabletUp:up,travel).normalize();
+      camera.lookAt(gaze.lerpVectors(overview.target, destination.target, MathUtils.smoothstep(travel, 0, .9)));
       camera.updateProjectionMatrix();
       return;
     }
@@ -291,7 +306,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   function draw(updateTargets = true) {
     positionCamera();
     camera.updateMatrixWorld();
-    mainScreen.material.color.lerpColors(offColor, onColor, screenPower);
+    mainScreen.material.color.lerpColors(offColor, onColor, focusKind==='profile'?0:screenPower);
     windowView.render(renderer);
     renderer.render(scene, camera);
     if (!updateTargets) return;
@@ -300,9 +315,12 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
       const pull = windowView.pullOutline();
       placeSceneTargets(worldCorners.map(toViewport), convexHull(outlines.flat()), outlines, {
         cord: pull.cord.map(toViewport), handle: convexHull(pull.handle.map(toViewport)),
-      });
+      },tabletCorners.map(toViewport));
     }
-    if (travel === 1) placeDesktop(worldCorners.map(toViewport));
+    if (travel === 1) {
+      if(focusKind==='profile')placeProfile(tabletCorners.map(toViewport));
+      else placeDesktop(worldCorners.map(toViewport));
+    }
   }
 
   function animateScenery(now) {
@@ -399,10 +417,13 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     const verticalTangent = Math.tan(MathUtils.degToRad(desktop.fov / 2));
     const frameDistance = Math.max(screenSize.x / (.87 * 2 * verticalTangent * camera.aspect), screenSize.y / (.82 * 2 * verticalTangent));
     desktop.position.copy(screenCenter).addScaledVector(screenNormal, frameDistance);
+    const tabletDistance=Math.max(tabletSize.x/(.88*2*verticalTangent*camera.aspect),tabletSize.y/(.82*2*verticalTangent));
+    profileView.position.copy(tabletCenter).addScaledVector(tabletNormal,tabletDistance);
     draw();
   }
 
-  function moveCamera(opening) {
+  function moveCamera(opening,kind='desktop') {
+    if(opening)focusKind=kind;
     const motion = ++cameraMotion;
     const startTravel = travel;
     const startPower = screenPower;

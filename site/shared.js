@@ -6,6 +6,7 @@
   // Retire the former site override; CSS and scenes now follow native system preferences.
   try { sessionStorage.removeItem('ovo.motion'); } catch {}
   const words = {
+    profilePanel:['个人名片','Profile'],profile:['打开个人名片','Open profile'],profileLoading:['正在打开名片…','Opening profile…'],profileFailed:['名片暂时无法加载，点击屏幕外返回工作室。','The profile could not load. Click outside the screen to return.'],
     film:['作品胶片','Works filmstrip'],cancel:['取消换景','Cancel scene change'],switching:['正在切换窗景…','Changing the window scene…'],cancelled:['已保留当前窗景','Kept the current scene'],
     canvas:['工作室 3D 画面','Studio 3D scene'],greeting:['欢迎','Welcome'],screen:['电脑屏幕','Computer screen'],
     notFound:['找不到这个作品','Case not found'],chooseWork:['链接可能有误，请选择已有作品。','The link may be incorrect. Choose an available case.'],yingyu:['映遇','Yingyu'],bounce:['蹦动','Bounce'],

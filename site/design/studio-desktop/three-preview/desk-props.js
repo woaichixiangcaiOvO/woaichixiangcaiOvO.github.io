@@ -256,7 +256,7 @@ export async function createDeskProps(room, canvas, camera) {
   }
 
   function hitProp(event) {
-    if (event.target !== canvas && !event.target.closest?.('.monitor-hit, .projector-hit')) return null;
+    if (event.target !== canvas && !event.target.closest?.('.monitor-hit, .projector-hit, .ipad-hit')) return null;
     setRay(event);
     const hit = ray.intersectObjects(models, true)[0];
     if (!hit) return null;

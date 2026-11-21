@@ -43,6 +43,8 @@
     </section>
     <button class="monitor-hit" type="button" aria-label="打开电脑" hidden></button>
     <svg class="monitor-highlight" aria-hidden="true"><polygon></polygon></svg>
+    <button class="ipad-hit" type="button" data-ui-label="profile" aria-label="打开个人名片" aria-haspopup="dialog" aria-controls="profile-ui" hidden></button>
+    <svg class="ipad-highlight" aria-hidden="true"><polygon></polygon></svg>
     <button class="projector-hit" type="button" aria-label="打开放映机" aria-haspopup="dialog" aria-controls="projector-curtain" hidden></button>
     <svg class="projector-highlight" aria-hidden="true">
       <defs>
@@ -77,6 +79,7 @@
     <section class="screen-ui" aria-label="电脑屏幕" data-ui-label="screen" hidden>
       <div class="desktop-controls"></div>
     </section>
+    <section id="profile-ui" class="profile-ui" role="dialog" aria-modal="true" data-ui-label="profilePanel" aria-label="个人名片" hidden><p class="profile-load" role="status" data-ui="profileLoading">正在打开名片…</p><iframe class="profile-frame" title="OvO · 个人名片" hidden></iframe></section>
   <div class="preferences"><button class="language-global icon-control" type="button" aria-label="切换到英文" title="切换到英文"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h12M9 3v2m4 0c-1 6-4 9-9 12M5 8c1 4 4 7 8 9m1 4 4-10 4 10m-6.5-3h5"/></svg></button></div></main>
 </body>
 </html>

@@ -10,6 +10,19 @@ const retry = document.querySelector('.retry');
 const loading = document.querySelector('.loading');
 const failure = document.querySelector('.failure');
 const monitor = document.querySelector('.monitor-hit');
+const ipad=document.querySelector('.ipad-hit');
+const ipadHighlight=document.querySelector('.ipad-highlight polygon');
+const profileUi=document.querySelector('.profile-ui');
+const profileFrame=document.querySelector('.profile-frame');
+const profileLoad=document.querySelector('.profile-load');
+profileFrame.addEventListener('load',()=>{
+  if(!profileFrame.getAttribute('src'))return;
+  let profileApi;try{profileApi=profileFrame.contentWindow.ovoPrefs;}catch{}
+  const ready=!!profileApi&&profileFrame.contentDocument?.body.dataset.embedded==='true'&&!!profileFrame.contentDocument?.querySelector('.pages');
+  profileFrame.hidden=!ready;profileLoad.hidden=ready;
+  if(ready){profileFrame.title=ovoPrefs.language==='en'?'OvO · Profile':'OvO · 个人名片';profileApi.setLanguage(ovoPrefs.language);if(document.body.dataset.view==='profile')profileFrame.focus({preventScroll:true});}
+  else{profileLoad.dataset.ui='profileFailed';profileLoad.textContent=ovoPrefs.t('profileFailed');}
+});
 const highlight = document.querySelector('.monitor-highlight polygon');
 const projector = document.querySelector('.projector-hit');
 const projectorHighlight = document.querySelector('.projector-highlight g');
@@ -80,6 +93,8 @@ function show(view) {
   studio?.setOverviewActive(view === 'overview' && currentEntry().view === 'overview');
   welcome.inert = !['welcome', 'loading', 'error'].includes(view);
   monitor.hidden = view !== 'overview';
+  ipad.hidden=view!=='overview';
+  profileUi.hidden=view!=='profile';
   projector.hidden = view !== 'overview';
   windowPull.hidden = view !== 'overview';
   soundControls.hidden = view !== 'overview';
@@ -136,7 +151,8 @@ function polygonPoints(points) {
   return points.map(({ x, y }) => `${x},${y}`).join(' ');
 }
 
-function placeSceneTargets(monitorPoints, projectorPoints, projectorOutline, pull) {
+function placeSceneTargets(monitorPoints, projectorPoints, projectorOutline, pull, ipadPoints) {
+  placeTarget(ipad,ipadPoints);ipadHighlight.setAttribute('points',polygonPoints(ipadPoints));
   placeTarget(monitor, monitorPoints);
   highlight.setAttribute('points', polygonPoints(monitorPoints));
   placeTarget(projector, projectorPoints);
@@ -226,7 +242,7 @@ async function enterStudio() {
       if(document.body.dataset.view!=='loading')throw new Error('Load cancelled');
       return createStudio(
       canvas, placeSceneTargets, points => placeTarget(screen, points),
-      initialWindow, audio, previewOptions.get('cars') === '3',
+      initialWindow, audio, previewOptions.get('cars') === '3', points=>placeTarget(profileUi,points),
     );})]);
     clearTimeout(slow); clearTimeout(timeout);
     labelWindowPull();
@@ -284,23 +300,37 @@ async function showStudioEntry(entry) {
   if (navigation !== token) return;
   const previous = document.body.dataset.view;
   const atComputer = ['desktop', 'approaching', 'returning'].includes(previous);
+  const atProfile=['profile','profile-approaching','profile-returning'].includes(previous);
 
   if (entry.view === 'overview') {
     caseWindow.clear();
     if (projectorView.isOpen && !await projectorView.close()) return;
-    if (atComputer) {
-      show('returning');
+    if (atComputer||atProfile) {
+      show(atProfile?'profile-returning':'returning');
       if (!await studio.moveCamera(false)) return;
     }
     if (navigation !== token) return;
     show('overview');
-    (entry.focus === 'projector' ? projector : monitor).focus({ preventScroll: true });
+    (entry.focus === 'projector' ? projector : entry.focus==='ipad'?ipad:monitor).focus({ preventScroll: true });
     return;
+  }
+
+  if(entry.view==='profile'){
+    caseWindow.clear();if(projectorView.isOpen)projectorView.clear();
+    if(!profileFrame.getAttribute('src')||profileLoad.dataset.ui==='profileFailed'){
+      profileFrame.hidden=true;profileLoad.hidden=false;profileLoad.dataset.ui='profileLoading';profileLoad.textContent=ovoPrefs.t('profileLoading');
+      const profileUrl=new URL('../../../profile/index.html?embedded=1',import.meta.url).href;
+      if(profileFrame.getAttribute('src'))profileFrame.contentWindow.location.replace(profileUrl);
+      else profileFrame.src=profileUrl;
+    }
+    show('profile-approaching');
+    if(!await studio.moveCamera(true,'profile')||navigation!==token)return;
+    show('profile');profileFrame.focus({preventScroll:true});return;
   }
 
   if (entry.view === 'projector') {
     caseWindow.clear();
-    if (atComputer) studio.restoreOverview();
+    if (atComputer||atProfile) studio.restoreOverview();
     projectorView.open(entry.work, true, readingProgress.get(entry.readingKey));
     return;
   }
@@ -327,6 +357,7 @@ function restart(autostart) {
 retry.addEventListener('click', () => restart(true));
 document.querySelector('.welcome-back').addEventListener('click',()=>restart(false));
 window.addEventListener('ovo-language',()=>{
+  profileFrame.title=ovoPrefs.language==='en'?'OvO · Profile':'OvO · 个人名片';
   renderSoundControls();labelWindowPull();
   monitor.setAttribute('aria-label',ovoPrefs.t('computer'));projector.setAttribute('aria-label',ovoPrefs.t('projector'));
   for(const [id,button] of workIcons)button.setAttribute('aria-label',ovoPrefs.language==='en'?(id==='yingyu'?'Yingyu':'Bounce'):works[id].title);
@@ -336,6 +367,13 @@ monitor.addEventListener('click', () => {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
   enterView({ view: 'overview', focus: 'computer' }, { view: 'desktop' });
 });
+ipad.addEventListener('click',()=>{
+  if(windowTransition||resetTransition||document.body.dataset.view!=='overview')return;
+  enterView({view:'overview',focus:'ipad'},{view:'profile'});
+});
+function closeProfile(){if(currentEntry().view==='profile')goBack('profile');}
+window.addEventListener('message',event=>{if(event.origin===location.origin&&event.source===profileFrame.contentWindow&&event.data?.type==='ovo-profile-close')closeProfile();});
+window.addEventListener('click',event=>{if(document.body.dataset.view!=='profile'||profileUi.contains(event.target)||event.button!==0)return;event.preventDefault();event.stopPropagation();closeProfile();},true);
 projector.addEventListener('click', () => {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
   enterView({ view: 'overview', focus: 'projector' }, { view: 'projector', work: 'yingyu' });
@@ -358,6 +396,7 @@ window.addEventListener('click',event=>{
   event.preventDefault();event.stopPropagation();exitComputer();
 },true);
 window.addEventListener('keydown', event => {
+  if(event.key==='Escape'&&document.body.dataset.view==='profile'){event.preventDefault();closeProfile();return;}
   if (event.key === 'Escape' && !caseWindow.isOpen && document.body.dataset.view === 'desktop') exitComputer();
 });
 window.addEventListener('popstate', () => {
