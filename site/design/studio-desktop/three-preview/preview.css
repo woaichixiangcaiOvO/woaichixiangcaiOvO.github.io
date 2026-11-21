@@ -63,3 +63,10 @@ body[data-view="error"] .enter { display: none; }
   .monitor-highlight, .projector-highlight, .window-pull-highlight { transition: opacity 150ms ease-out; }
   @keyframes breathe { from { opacity: .55; transform: scale(.85); } to { opacity: 1; transform: scale(1.07); } }
 }
+
+.preferences {position:fixed;right:max(20px,2.4vw);bottom:max(20px,3vh);display:flex;gap:8px;z-index:20}
+.preferences button {padding:9px 12px;min-height:42px;background:#17100de8;border:1px solid #e7ce9c52;border-radius:7px}
+body[data-view="overview"] .studio-sound {bottom:calc(max(20px,3vh) + 53px)}
+body:not(:is([data-view="welcome"],[data-view="overview"],[data-view="error"])) .preferences {display:none}
+.welcome-back {background:transparent;border:0;padding:9px 12px;text-decoration:underline}
+body[data-view="error"] .lamp {animation:none}

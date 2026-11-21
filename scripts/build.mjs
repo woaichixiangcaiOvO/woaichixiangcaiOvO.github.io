@@ -63,3 +63,9 @@ async function buildCase(id) {
 
 await Promise.all([...vendors.map(copyVendor), buildCase('yingyu'), buildCase('bounce')]);
 console.log('Built the portfolio in dist/.');
+
+// Precompressed sidecars keep the static distribution portable (including Pages).
+const {readdir}=await import('node:fs/promises');
+const {brotliCompressSync,gzipSync,constants}=await import('node:zlib');
+async function compress(dir){for(const entry of await readdir(dir,{withFileTypes:true})){const name=path.join(dir,entry.name);if(entry.isDirectory())await compress(name);else if(/\.(?:html|css|js|mjs|svg|glb)$/.test(name)){const data=await readFile(name);await Promise.all([writeFile(name+'.br',brotliCompressSync(data,{params:{[constants.BROTLI_PARAM_QUALITY]:5}})),writeFile(name+'.gz',gzipSync(data))]);}}}
+await compress(dist);

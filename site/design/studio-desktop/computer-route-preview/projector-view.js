@@ -12,9 +12,10 @@
     const frame = document.createElement('iframe');
     const restore = id === 'yingyu' && progress ? { progress, ready: false, seeking: false } : null;
     if (restore) frameProgress.set(frame, restore);
-    frame.title = `${works[id].title} · 双语作品案例`;
+    frame.title = window.ovoPrefs.language==='en' ? `${id==='yingyu'?'Yingyu':'Bounce'} case study` : `${works[id].title} · 双语作品案例`;
     frame.addEventListener('load', () => {
       const doc = frame.contentDocument;
+      frame.contentWindow.ovoPrefs?.setLanguage(window.ovoPrefs.language);
       doc.addEventListener('keydown', onKeyDown, true);
       doc.addEventListener('click', event => {
         const anchor = event.target.closest('a[href^="#"]');
@@ -68,10 +69,11 @@
     curtain.className = 'curtain projector-curtain';
     curtain.id = 'projector-curtain';
     curtain.setAttribute('aria-label', '放映机作品目录');
+    curtain.dataset.uiLabel='catalog';
     curtain.innerHTML = `
       <div class="case-content" id="projector-case"></div>
       <nav class="film" aria-label="作品胶片"><ul class="film-track"></ul></nav>
-      <button class="curtain-close" type="button" aria-label="关闭幕布" autofocus>×</button>`;
+      <button class="curtain-close" type="button" data-ui-label="curtain" aria-label="关闭幕布" autofocus>×</button>`;
     const content = curtain.querySelector('.case-content');
     const film = curtain.querySelector('.film-track');
     const frames = new Map();

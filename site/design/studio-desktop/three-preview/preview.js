@@ -99,7 +99,8 @@ function renderSoundControls() {
   soundEnable.hidden = !waiting;
   soundToggle.disabled = audio.status === 'unavailable';
   soundToggle.setAttribute('aria-pressed', String(audio.muted));
-  soundToggle.textContent = soundToggle.disabled ? '音效不可用' : audio.muted ? '取消静音' : '静音';
+  soundToggle.textContent = ovoPrefs.t(soundToggle.disabled ? 'unavailable' : audio.muted ? 'muted' : 'mute');
+  soundToggle.setAttribute('aria-label', soundToggle.textContent);
   if (focusToggle) soundToggle.focus({ preventScroll: true });
 }
 
@@ -166,7 +167,7 @@ function nextWindow() {
 }
 
 function labelWindowPull() {
-  windowPull.setAttribute('aria-label', `窗边拉绳，切换到${windowTitles[nextWindow()]}`);
+  windowPull.setAttribute('aria-label', ovoPrefs.language === 'en' ? `Window cord, switch to ${ovoPrefs.t(nextWindow())}` : `窗边拉绳，切换到${windowTitles[nextWindow()]}`);
 }
 
 async function changeWindow() {
@@ -177,8 +178,8 @@ async function changeWindow() {
   windowTransition = studio.switchWindow(next);
   try {
     windowStatus.textContent = await windowTransition
-      ? `已切换到${windowTitles[next]}`
-      : '窗景加载失败，请再次拉动窗边拉绳重试';
+      ? (ovoPrefs.language === 'en' ? `Switched to ${ovoPrefs.t(next)}` : `已切换到${windowTitles[next]}`)
+      : ovoPrefs.t('switchError');
     labelWindowPull();
   } finally {
     renderSoundControls();
@@ -194,7 +195,7 @@ async function resetProps() {
   propReset.setAttribute('aria-disabled', 'true');
   resetTransition = studio.resetProps();
   try {
-    windowStatus.textContent = await resetTransition ? '道具已归位' : '道具暂时无法归位';
+    windowStatus.textContent = ovoPrefs.t(await resetTransition ? 'ready' : 'resetError');
   } finally {
     resetTransition = undefined;
     delete canvas.dataset.resetting;
@@ -207,12 +208,17 @@ async function enterStudio() {
   audio.unlock();
   performance.mark('studio-load-start');
   show('loading');
+  const slow = setTimeout(() => { loading.textContent = ovoPrefs.t('slow'); }, 8000);
+  let timeout;
+  const deadline = new Promise((_,reject) => { timeout=setTimeout(()=>reject(new Error('Studio load timeout')),30000); });
   try {
-    const { createStudio } = await import('./scene.js');
-    studio = await createStudio(
+    studio = await Promise.race([deadline, import('./scene.js').then(({createStudio}) => {
+      if(document.body.dataset.view!=='loading')throw new Error('Load cancelled');
+      return createStudio(
       canvas, placeSceneTargets, points => placeTarget(screen, points),
       initialWindow, audio, previewOptions.get('cars') === '3',
-    );
+    );})]);
+    clearTimeout(slow); clearTimeout(timeout);
     labelWindowPull();
     const modelReady = performance.measure('studio-model-ready', 'studio-load-start');
     canvas.dataset.modelReadyMs = String(Math.round(modelReady.duration));
@@ -227,6 +233,7 @@ async function enterStudio() {
     canvas.dataset.modelBytes = String(modelTransfer?.transferSize ?? 0);
     showStudioEntry(currentEntry());
   } catch (error) {
+    clearTimeout(slow); clearTimeout(timeout);
     console.error(error);
     show('error');
     retry.focus();
@@ -303,7 +310,19 @@ async function showStudioEntry(entry) {
 }
 
 enter.addEventListener('click', enterStudio);
-retry.addEventListener('click', () => location.reload());
+function restart(autostart) {
+  const url=new URL(location.href);if(autostart)url.searchParams.set('enter','1');else url.searchParams.delete('enter');
+  history.replaceState(null,'',url);location.reload();
+}
+retry.addEventListener('click', () => restart(true));
+document.querySelector('.welcome-back').addEventListener('click',()=>restart(false));
+document.querySelector('.view-reset').addEventListener('click',()=>studio?.resetView());
+window.addEventListener('ovo-language',()=>{
+  renderSoundControls();labelWindowPull();
+  monitor.setAttribute('aria-label',ovoPrefs.t('computer'));projector.setAttribute('aria-label',ovoPrefs.t('projector'));
+  for(const [id,button] of workIcons)button.setAttribute('aria-label',ovoPrefs.language==='en'?(id==='yingyu'?'Yingyu':'Bounce'):works[id].title);
+  studio?.refreshLanguage();
+});
 monitor.addEventListener('click', () => {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
   enterView({ view: 'overview', focus: 'computer' }, { view: 'desktop' });

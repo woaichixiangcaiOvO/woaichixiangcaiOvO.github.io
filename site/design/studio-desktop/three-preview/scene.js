@@ -14,7 +14,13 @@ const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 const warmBackground = 0x0c0909;
 const activeFrameInterval = 1000 / 60;
 
+const imageCache = new Map();
 async function loadImage(relativeUrl) {
+  if(imageCache.has(relativeUrl))return imageCache.get(relativeUrl);
+  const promise=decodeImage(relativeUrl); imageCache.set(relativeUrl,promise);
+  try{return await promise;}catch(error){imageCache.delete(relativeUrl);throw error;}
+}
+async function decodeImage(relativeUrl) {
   const image = new Image();
   image.src = new URL(relativeUrl, import.meta.url).href;
   await image.decode();
@@ -55,7 +61,7 @@ async function desktopTexture() {
     context.fill();
     context.drawImage(pictures[index], center - imageSize / 2, y + (iconSize - imageSize) / 2, imageSize, imageSize);
     context.fillStyle = '#fff';
-    context.fillText(works[id].title, center, y + labelBaseline);
+    context.fillText(window.ovoPrefs.language==='en'?(id==='yingyu'?'Yingyu':'Bounce'):works[id].title, center, y + labelBaseline);
   });
   return screenTexture(canvas);
 }
@@ -71,7 +77,7 @@ function signTexture() {
   context.font = '700 128px "Microsoft YaHei", sans-serif';
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.fillText('← 作品', canvas.width / 2, canvas.height / 2);
+  context.fillText(window.ovoPrefs.language==='en'?'← Works':'← 作品', canvas.width / 2, canvas.height / 2);
   return screenTexture(canvas);
 }
 
@@ -199,6 +205,28 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     });
   // Match the active Blender overview direction in glTF's Y-up coordinates.
   const overview = { position: new Vector3(-11.8, 7.35, 14.4), target: new Vector3(0, 1.45, -.05) };
+  const defaultPosition=overview.position.clone();
+  let yaw=0, pitch=0, viewDrag;
+  function resetView(){yaw=0;pitch=0;overview.position.copy(defaultPosition);draw();}
+  function dragStart(e){
+    if(!overviewActive||windowSwitching||resetting||travel!==0||e.target!==canvas||e.button!==0||canvas.dataset.propCursor)return;
+    viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);
+  }
+  function dragMove(e){if(!viewDrag||viewDrag.id!==e.pointerId)return;
+    yaw=MathUtils.clamp(viewDrag.yaw+(e.clientX-viewDrag.x)*.0007,-.14,.14);
+    pitch=MathUtils.clamp(viewDrag.pitch+(e.clientY-viewDrag.y)*.003,-.65,.65);
+    overview.position.copy(defaultPosition).sub(overview.target).applyAxisAngle(new Vector3(0,1,0),yaw).add(overview.target);overview.position.y+=pitch;draw();
+  }
+  const stopDrag=()=>{viewDrag=undefined;};
+  window.addEventListener('pointerdown',dragStart);window.addEventListener('pointermove',dragMove);
+  window.addEventListener('pointerup',stopDrag);window.addEventListener('pointercancel',stopDrag);window.addEventListener('blur',stopDrag);
+  async function refreshLanguage(){const next=await desktopTexture();const old=mainScreen.material.map;mainScreen.material.map=next;mainScreen.material.needsUpdate=true;old?.dispose();const sign=tabletScreen.material.map;tabletScreen.material.map=signTexture();sign?.dispose();draw();}
+  const reelMeshes=[];projector.traverse(o=>{if(o.isMesh&&/^Projector_Reel_(Hub|Rim|Spoke)/.test(o.name))reelMeshes.push(o);});
+  const hubs=reelMeshes.filter(o=>o.name.startsWith('Projector_Reel_Hub'));
+  const pivots=hubs.map(h=>{const p=new Group();p.position.copy(h.position);projector.add(p);return p;});
+  for(const mesh of reelMeshes){let closest=0;for(let i=1;i<hubs.length;i++)if(mesh.position.distanceTo(pivots[i].position)<mesh.position.distanceTo(pivots[closest].position))closest=i;pivots[closest]?.attach(mesh);}
+  const lens=room.getObjectByName('Projector_Lens_Glass');if(lens?.material.emissive){lens.material=lens.material.clone();lens.material.emissive.set('#ffd6a0');}
+  let cueTime=0;
   const lampCenter = lamp.getWorldPosition(new Vector3());
   const overviewFromLamp = overview.position.clone().sub(lampCenter);
   const up = new Vector3(0, 1, 0);
@@ -289,10 +317,11 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
       if (smoothMotion) sceneryNextFrame += (Math.floor(activeElapsed / activeFrameInterval) + 1) * activeFrameInterval;
       sceneryLastTick = now;
       const elapsedMs = Math.min(elapsed, 80);
+      if(!motionPreference.matches){cueTime+=elapsedMs/1000;const pulse=Math.max(0,1-Math.abs((cueTime%8)-1));for(const p of pivots)p.rotation.z+=pulse*elapsedMs*.0014;if(lens?.material.emissive)lens.material.emissiveIntensity=pulse*.7;}
       const sceneryChanged = !motionPreference.matches && windowView.advance(elapsedMs);
       const shelfChanged = !motionPreference.matches && shelfMotion.advance(elapsedMs);
       const propsChanged = deskProps?.advance(elapsedMs);
-      if (sceneryChanged || propsChanged || shelfChanged) draw(false);
+      if (sceneryChanged || propsChanged || shelfChanged || !motionPreference.matches) draw(!!viewDrag);
     }
     sceneryFrame = requestAnimationFrame(animateScenery);
   }
@@ -490,5 +519,5 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   window.addEventListener('pagehide', stopScenery);
   window.addEventListener('pageshow', syncScenery);
   motionPreference.addEventListener('change', syncScenery);
-  return { arriveFromLamp, moveCamera, restoreOverview, switchWindow, setOverviewActive, resetProps };
+  return { arriveFromLamp, moveCamera, restoreOverview, switchWindow, setOverviewActive, resetProps, resetView, refreshLanguage };
 }

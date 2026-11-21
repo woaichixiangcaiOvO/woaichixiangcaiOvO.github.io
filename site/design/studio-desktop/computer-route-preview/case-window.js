@@ -10,7 +10,7 @@
     panel.setAttribute('aria-modal', 'true');
     panel.hidden = true;
     panel.innerHTML = `
-      <button class="close" type="button" aria-label="关闭作品窗口">×</button>
+      <button class="close" type="button" data-ui-label="close" aria-label="关闭作品窗口">×</button>
       <div class="case-content"></div>
       <span class="focus-end" tabindex="0"></span>`;
     const content = panel.querySelector('.case-content');
@@ -60,7 +60,7 @@
       const id = button.dataset.work;
       frame = createFrame(id, onKey, progress);
       content.append(frame);
-      panel.setAttribute('aria-label', `${works[id].title}案例`);
+      panel.setAttribute('aria-label', window.ovoPrefs.language==='en' ? `${id==='yingyu'?'Yingyu':'Bounce'} case` : `${works[id].title}案例`);
       panel.hidden = false;
       desktop.inert = true;
       leave.inert = true;

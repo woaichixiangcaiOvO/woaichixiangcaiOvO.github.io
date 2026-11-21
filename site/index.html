@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./design/studio-desktop/computer-route-preview/projector.css">
   <link rel="stylesheet" href="./design/studio-desktop/yingyu-window-preview/case-window.css">
   <link rel="stylesheet" href="./design/studio-desktop/three-preview/preview.css">
+  <script src="./shared.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -27,17 +28,17 @@
   <main>
     <canvas id="studio" aria-label="工作室 3D 画面"></canvas>
     <section class="welcome" aria-label="欢迎">
-      <h1>你好，我是OvO</h1>
+      <h1 data-ui="welcome">你好，我是OvO</h1>
       <button class="enter" type="button">
         <span class="lamp-anchor" aria-hidden="true">
           <span class="entry-light"><span class="lamp"></span></span>
         </span>
-        <span class="enter-label">进入工作室 →</span>
+        <span class="enter-label" data-ui="enter">进入工作室 →</span>
       </button>
-      <p class="loading" role="status" hidden>正在准备工作室</p>
+      <p class="loading" role="status" data-ui="loading" hidden>正在准备工作室</p>
       <div class="failure" hidden>
-        <p role="alert">工作室未能加载。请确认 Edge 可以使用 WebGL。</p>
-        <button class="retry" type="button">重试</button>
+        <p role="alert" data-ui="failure">工作室未能加载，请检查网络或浏览器的 3D 支持。</p>
+        <button class="retry" data-ui="retry" type="button">重试</button><button class="welcome-back" data-ui="back" type="button">返回欢迎页</button>
       </div>
     </section>
     <button class="monitor-hit" type="button" aria-label="打开电脑" hidden></button>
@@ -68,15 +69,15 @@
       <g filter="url(#window-pull-glow)"><polyline></polyline><polygon></polygon></g>
     </svg>
     <p class="window-status" role="status"></p>
-    <div class="studio-sound" hidden>
-      <button class="sound-enable" type="button" hidden>点击启用声音</button>
+    <div class="studio-sound" hidden><button class="view-reset" data-ui="home" type="button">回到全景</button>
+      <button data-ui="sound" class="sound-enable" type="button" hidden>点击启用声音</button>
       <button class="sound-toggle" type="button" aria-label="静音场景音效" aria-pressed="false">静音</button>
-      <button class="prop-reset" type="button">复位道具</button>
+      <button data-ui="reset" class="prop-reset" type="button">复位道具</button>
     </div>
     <section class="screen-ui" aria-label="电脑屏幕" hidden>
       <div class="desktop-controls"></div>
     </section>
-    <button class="leave" type="button" hidden>← 回到工作室</button>
-  </main>
+    <button data-ui="leave" class="leave" type="button" hidden>← 回到工作室</button>
+  <div class="preferences"><button class="language-global" type="button">EN</button><button class="motion-toggle" type="button">减少动态效果</button></div></main>
 </body>
 </html>

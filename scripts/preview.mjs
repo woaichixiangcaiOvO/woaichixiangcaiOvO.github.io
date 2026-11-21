@@ -60,7 +60,13 @@ const server = createServer(async (request, response) => {
       return;
     }
     const type = types[path.extname(filename)] ?? 'application/octet-stream';
-    const headers = { 'Content-Type': type, 'Content-Length': file.size };
+    const headers = { 'Content-Type': type, 'Content-Length': file.size, Vary:'Accept-Encoding' };
+    if(!request.headers.range && /(?:javascript|text\/|svg|gltf)/.test(type)){
+      const accepted=request.headers['accept-encoding']??'';
+      const extension=/\bbr\b/.test(accepted)?'.br':/\bgzip\b/.test(accepted)?'.gz':null;
+      const compressed=extension&&await stat(filename+extension).catch(()=>null);
+      if(compressed){filename+=extension;headers['Content-Encoding']=extension==='.br'?'br':'gzip';headers['Content-Length']=compressed.size;}
+    }
     let range;
     if (type === 'video/mp4') {
       headers['Accept-Ranges'] = 'bytes';
@@ -86,7 +92,7 @@ const server = createServer(async (request, response) => {
   } catch (error) {
     const status = error instanceof URIError ? 400 : ['ENOENT', 'ENOTDIR'].includes(error.code) ? 404 : 500;
     if (status === 500) console.error(error);
-    response.writeHead(status).end();
+    if(status===404){const {readFile}=await import('node:fs/promises');const html=await readFile(path.join(root,'404.html'));response.writeHead(404,{'Content-Type':'text/html; charset=utf-8','Content-Length':html.length});response.end(request.method==='HEAD'?undefined:html);}else response.writeHead(status).end();
   }
 });
 
