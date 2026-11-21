@@ -1,6 +1,7 @@
 const mixLevel = .32256;
 const turnPeak = .61;
 const threeCarLevel = .88;
+const silenceFade = .024;
 const engineSettings = [
   { pitch: 1, level: .74 },
   { pitch: .947, level: .65 },
@@ -59,11 +60,20 @@ export function createEngineMix(context) {
     const stereo = context.createStereoPanner();
     source.connect(glass).connect(gain).connect(stereo).connect(master);
     source.start(0, index * .083);
-    return { source, glass, gain, stereo, pitch, level };
+    return { source, glass, gain, stereo, pitch, level, sounding: false };
   });
 
+  function fadeGain(parameter, value) {
+    const now = context.currentTime;
+    parameter.cancelAndHoldAtTime(now);
+    parameter.linearRampToValueAtTime(value, now + silenceFade);
+  }
+
   function moveCar(index, progress, screenX, groupSize, at = context.currentTime) {
-    const { source, glass, gain, stereo, pitch, level } = voices[index];
+    const voice = voices[index];
+    const { source, glass, gain, stereo, pitch, level } = voice;
+    if (!voice.sounding) gain.gain.cancelAndHoldAtTime(at);
+    voice.sounding = true;
     const proximity = progress < turnPeak
       ? smooth(0, turnPeak, progress)
       : 1 - smooth(turnPeak, 1, progress);
@@ -77,14 +87,21 @@ export function createEngineMix(context) {
     stereo.pan.setTargetAtTime(.29 * Math.min(1, Math.max(-1, screenX)) - .09, at, .05);
   }
 
+  function stopCar(index) {
+    const voice = voices[index];
+    if (!voice.sounding) return;
+    voice.sounding = false;
+    fadeGain(voice.gain.gain, 0);
+  }
+
   return {
     moveCar,
+    stopCar,
     silence() {
-      const now = context.currentTime;
-      for (const { gain } of voices) gain.gain.setTargetAtTime(0, now, .009);
+      voices.forEach((_, index) => stopCar(index));
     },
     setMuted(muted) {
-      master.gain.setTargetAtTime(muted ? 0 : mixLevel, context.currentTime, .008);
+      fadeGain(master.gain, muted ? 0 : mixLevel);
     },
   };
 }
@@ -127,6 +144,7 @@ export function createMonzaAudio(onStatus) {
     moveCar(index, progress, screenX, groupSize) {
       if (context?.state === 'running') mix?.moveCar(index, progress, screenX, groupSize);
     },
+    stopCar(index) { mix?.stopCar(index); },
     silence() { mix?.silence(); },
   };
 }

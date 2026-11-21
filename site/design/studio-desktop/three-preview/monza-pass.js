@@ -111,19 +111,25 @@ function foregroundMask() {
     [936, 312], [941, 315], [947, 307], [953, 304], [960, 302],
     [960, plateHeight], [838, plateHeight],
   ];
-  context.beginPath();
-  context.moveTo(...canopy[0]);
-  for (const [x, y] of canopy.slice(1)) context.lineTo(x, y);
-  context.closePath();
+  const outline = new Path2D();
+  outline.moveTo(...canopy[0]);
+  for (const [x, y] of canopy.slice(1)) outline.lineTo(x, y);
+  outline.closePath();
   context.fillStyle = '#000';
-  context.fill();
-  return new CanvasTexture(canvas);
+  context.fill(outline);
+  return {
+    texture: new CanvasTexture(canvas),
+    covers(x, y) {
+      return context.isPointInPath(outline, x, y);
+    },
+  };
 }
 
 export function createMonzaPass(windowGeometry, audio, firstGroupHasThree = false) {
   const target = new WebGLRenderTarget(plateWidth, plateHeight, { samples: 4 });
+  const mask = foregroundMask();
   const screen = new Mesh(windowGeometry, new MeshBasicMaterial({
-    map: target.texture, alphaMap: foregroundMask(), transparent: true, depthWrite: false,
+    map: target.texture, alphaMap: mask.texture, transparent: true, depthWrite: false,
     polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1,
   }));
   screen.visible = false;
@@ -184,10 +190,9 @@ export function createMonzaPass(windowGeometry, audio, firstGroupHasThree = fals
 
   function drive({ group, delay, car }, index) {
     const progress = (elapsed - delay) / passDuration;
-    const wasVisible = group.visible;
     group.visible = index < groupSize && progress >= 0 && progress < 1;
     if (!group.visible) {
-      if (wasVisible) audio.moveCar(index, 0, 0, groupSize);
+      audio.stopCar(index);
       return false;
     }
     // A little more speed on approach and exit, leaving the apex readable.
@@ -200,10 +205,14 @@ export function createMonzaPass(windowGeometry, audio, firstGroupHasThree = fals
     const turn = Math.atan2(crossY, heading.dot(nextHeading));
     for (const wheel of car.steering) wheel.rotation.y = MathUtils.clamp(turn * 1.5, -.21, .21);
     for (const wheel of car.spinning) wheel.rotation.z = distance * pathLength / .351;
-    if (!quietPass) {
-      const screenX = screenPosition.copy(group.position).project(camera).x;
-      audio.moveCar(index, progress, screenX, groupSize);
-    }
+    screenPosition.copy(group.position);
+    screenPosition.y += .6;
+    screenPosition.project(camera);
+    const { x, y } = screenPosition;
+    const insidePlate = Math.abs(x) < 1 && Math.abs(y) < 1;
+    const behindTrees = insidePlate && mask.covers((x + 1) * plateWidth / 2, (1 - y) * plateHeight / 2);
+    if (quietPass || !insidePlate || behindTrees) audio.stopCar(index);
+    else audio.moveCar(index, progress, x, groupSize);
     return true;
   }
 
