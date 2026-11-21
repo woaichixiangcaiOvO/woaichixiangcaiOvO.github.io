@@ -26,8 +26,8 @@
 </head>
 <body data-view="welcome">
   <main>
-    <canvas id="studio" aria-label="工作室 3D 画面"></canvas>
-    <section class="welcome" aria-label="欢迎">
+    <canvas id="studio" aria-label="工作室 3D 画面" data-ui-label="canvas"></canvas>
+    <section class="welcome" aria-label="欢迎" data-ui-label="greeting">
       <h1 data-ui="welcome">你好，我是OvO</h1>
       <button class="enter" type="button">
         <span class="lamp-anchor" aria-hidden="true">
@@ -69,12 +69,13 @@
       <g filter="url(#window-pull-glow)"><polyline></polyline><polygon></polygon></g>
     </svg>
     <p class="window-status" role="status"></p>
+    <button class="scene-cancel" type="button" data-ui="cancel" hidden>取消换景</button>
     <div class="studio-sound" hidden><button class="view-reset" data-ui="home" type="button">回到全景</button>
       <button data-ui="sound" class="sound-enable" type="button" hidden>点击启用声音</button>
       <button class="sound-toggle" type="button" aria-label="静音场景音效" aria-pressed="false">静音</button>
       <button data-ui="reset" class="prop-reset" type="button">复位道具</button>
     </div>
-    <section class="screen-ui" aria-label="电脑屏幕" hidden>
+    <section class="screen-ui" aria-label="电脑屏幕" data-ui-label="screen" hidden>
       <div class="desktop-controls"></div>
     </section>
     <button data-ui="leave" class="leave" type="button" hidden>← 回到工作室</button>

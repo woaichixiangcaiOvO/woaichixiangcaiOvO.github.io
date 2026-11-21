@@ -70,3 +70,5 @@ body[data-view="overview"] .studio-sound {bottom:calc(max(20px,3vh) + 53px)}
 body:not(:is([data-view="welcome"],[data-view="overview"],[data-view="error"])) .preferences {display:none}
 .welcome-back {background:transparent;border:0;padding:9px 12px;text-decoration:underline}
 body[data-view="error"] .lamp {animation:none}
+.scene-cancel{position:fixed;z-index:45;right:28px;bottom:142px;padding:8px 12px;color:#efe8da;background:#27241e;border:1px solid #8a8170;border-radius:4px}
+.scene-cancel[hidden]{display:none}

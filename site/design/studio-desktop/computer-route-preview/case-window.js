@@ -58,6 +58,7 @@
       clear();
       opener = button;
       const id = button.dataset.work;
+      panel.dataset.caseLabel=id;
       frame = createFrame(id, onKey, progress);
       content.append(frame);
       panel.setAttribute('aria-label', window.ovoPrefs.language==='en' ? `${id==='yingyu'?'Yingyu':'Bounce'} case` : `${works[id].title}案例`);

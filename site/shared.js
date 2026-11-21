@@ -21,6 +21,8 @@
     for (const sheet of document.styleSheets) { try { walk(sheet.cssRules); } catch {} }
   }
   const words = {
+    film:['作品胶片','Works filmstrip'],cancel:['取消换景','Cancel scene change'],switching:['正在切换窗景…','Changing the window scene…'],cancelled:['已保留当前窗景','Kept the current scene'],
+    canvas:['工作室 3D 画面','Studio 3D scene'],greeting:['欢迎','Welcome'],screen:['电脑屏幕','Computer screen'],
     notFound:['找不到这个作品','Case not found'],chooseWork:['链接可能有误，请选择已有作品。','The link may be incorrect. Choose an available case.'],yingyu:['映遇','Yingyu'],bounce:['蹦动','Bounce'],
     welcome:['你好，我是OvO',"Hi, I'm OvO"], enter:['进入工作室 →','Enter studio →'], retry:['重试','Retry'],
     back:['返回欢迎页','Back to welcome'], loading:['正在准备工作室','Preparing the studio'],
@@ -36,11 +38,20 @@
   function translate() {
     for(const el of document.querySelectorAll('[data-ui]')) el.textContent=t(el.dataset.ui);
     for(const el of document.querySelectorAll('[data-ui-label]')) el.setAttribute('aria-label',t(el.dataset.uiLabel));
+    for(const el of document.querySelectorAll('[data-scene-status]'))el.textContent=language==='en'?`Switched to ${t(el.dataset.sceneStatus)}`:`已切换到${el.dataset.sceneStatus==='orbit'?'太空版':'赛道版'}`;
     for(const b of document.querySelectorAll('.film-track button')) b.setAttribute('aria-label',language==='en'?(b.closest('[data-work]').dataset.work==='yingyu'?'Yingyu':'Bounce'):(b.closest('[data-work]').dataset.work==='yingyu'?'映遇':'蹦动'));
-    for(const e of document.querySelectorAll('.image-error'))e.textContent=language==='en'?`Image unavailable: ${e.dataset.alt}`:`图片暂时无法加载：${e.dataset.alt}`;
+    for(const el of document.querySelectorAll('[data-case-label]')) {
+      const name=t(el.dataset.caseLabel);
+      if(el.tagName==='IFRAME')el.title=language==='en'?`${name} case study`:`${name} · 双语作品案例`;
+      else el.setAttribute('aria-label',language==='en'?`${name} case`:`${name}案例`);
+    }
     for(const frame of document.querySelectorAll('iframe')) { try { frame.contentWindow.ovoPrefs?.setLanguage(language); } catch {} }
     const option=document.querySelector(`[data-language="${language}"]`);
     if(option?.getAttribute('aria-pressed')!=='true') option?.click();
+    for(const e of document.querySelectorAll('.image-error')) {
+      const alt=e.previousElementSibling?.alt || e.dataset.alt;
+      e.textContent=language==='en'?`Image unavailable: ${alt}`:`图片暂时无法加载：${alt}`;
+    }
     document.documentElement.lang=language;
     document.querySelectorAll('.language-global').forEach(el=>el.textContent=language==='en'?'中文':'EN');
     document.querySelectorAll('.motion-toggle').forEach(el=>{el.textContent=t(media.matches?'full':'motion');el.setAttribute('aria-pressed',String(media.matches));});

@@ -218,6 +218,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     overview.position.copy(defaultPosition).sub(overview.target).applyAxisAngle(new Vector3(0,1,0),yaw).add(overview.target);overview.position.y+=pitch;draw();
   }
   const stopDrag=()=>{viewDrag=undefined;};
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopDrag();});
   window.addEventListener('pointerdown',dragStart);window.addEventListener('pointermove',dragMove);
   window.addEventListener('pointerup',stopDrag);window.addEventListener('pointercancel',stopDrag);window.addEventListener('blur',stopDrag);
   async function refreshLanguage(){const next=await desktopTexture();const old=mainScreen.material.map;mainScreen.material.map=next;mainScreen.material.needsUpdate=true;old?.dispose();const sign=tabletScreen.material.map;tabletScreen.material.map=signTexture();sign?.dispose();draw();}
@@ -347,6 +348,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
 
   function setOverviewActive(active) {
     overviewActive = active;
+    if(!active)stopDrag();
     syncScenery();
   }
 
@@ -456,7 +458,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     });
   }
 
-  async function switchWindow(next) {
+  async function switchWindow(next, signal, onLoaded = () => {}) {
     windowSwitching = true;
     syncScenery();
     try {
@@ -469,8 +471,17 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
         canvas.dataset.windowPhase = 'covered';
         await new Promise(resolve => setTimeout(resolve, 170));
       }
-      const [textures] = await Promise.all([scenery, propPhysics]);
-      if (textures) {
+      let timer;
+      let cancel;
+      const cancelled=new Promise(resolve=>{
+        cancel=()=>resolve(null);
+        if(signal?.aborted)cancel();else signal?.addEventListener('abort',cancel,{once:true});
+        timer=setTimeout(cancel,30000);
+      });
+      const textures=await Promise.race([Promise.all([scenery,propPhysics]).then(([loaded])=>loaded),cancelled]);
+      clearTimeout(timer);signal?.removeEventListener('abort',cancel);
+      onLoaded();
+      if (textures && !signal?.aborted) {
         windowView.select(next, textures);
         canvas.dataset.windowScene = next;
         deskProps?.setMode(next);
@@ -482,7 +493,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
         await animateShade(false, 660);
       }
       canvas.dataset.windowPhase = 'open';
-      return Boolean(textures);
+      return Boolean(textures) && !signal?.aborted;
     } finally {
       windowSwitching = false;
       syncScenery();

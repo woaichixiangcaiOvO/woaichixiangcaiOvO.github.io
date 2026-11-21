@@ -166,6 +166,10 @@ function nextWindow() {
   return canvas.dataset.windowScene === 'orbit' ? 'monza' : 'orbit';
 }
 
+const sceneCancel=document.querySelector('.scene-cancel');
+let sceneController;
+sceneCancel.addEventListener('click',()=>sceneController?.abort());
+
 function labelWindowPull() {
   windowPull.setAttribute('aria-label', ovoPrefs.language === 'en' ? `Window cord, switch to ${ovoPrefs.t(nextWindow())}` : `窗边拉绳，切换到${windowTitles[nextWindow()]}`);
 }
@@ -174,28 +178,37 @@ async function changeWindow() {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
   const next = nextWindow();
   windowPull.setAttribute('aria-disabled', 'true');
-  windowStatus.textContent = '';
-  windowTransition = studio.switchWindow(next);
+  delete windowStatus.dataset.sceneStatus;
+  windowStatus.dataset.ui='switching';windowStatus.textContent=ovoPrefs.t('switching');
+  sceneController=new AbortController();sceneCancel.hidden=false;
+  windowTransition = studio.switchWindow(next,sceneController.signal,()=>{sceneCancel.hidden=true;});
   try {
-    windowStatus.textContent = await windowTransition
+    const switched=await windowTransition;
+    delete windowStatus.dataset.ui;
+    if(switched)windowStatus.dataset.sceneStatus=next;
+    else windowStatus.dataset.ui=sceneController.signal.aborted?'cancelled':'switchError';
+    windowStatus.textContent = switched
       ? (ovoPrefs.language === 'en' ? `Switched to ${ovoPrefs.t(next)}` : `已切换到${windowTitles[next]}`)
-      : ovoPrefs.t('switchError');
+      : ovoPrefs.t(sceneController.signal.aborted?'cancelled':'switchError');
     labelWindowPull();
   } finally {
     renderSoundControls();
     windowTransition = undefined;
+    sceneCancel.hidden=true;sceneController=undefined;
     windowPull.removeAttribute('aria-disabled');
   }
 }
 
 async function resetProps() {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
+  delete windowStatus.dataset.sceneStatus;delete windowStatus.dataset.ui;
   windowStatus.textContent = '';
   canvas.dataset.resetting = 'true';
   propReset.setAttribute('aria-disabled', 'true');
   resetTransition = studio.resetProps();
   try {
-    windowStatus.textContent = ovoPrefs.t(await resetTransition ? 'ready' : 'resetError');
+    windowStatus.dataset.ui=await resetTransition?'ready':'resetError';
+    windowStatus.textContent = ovoPrefs.t(windowStatus.dataset.ui);
   } finally {
     resetTransition = undefined;
     delete canvas.dataset.resetting;
@@ -208,7 +221,8 @@ async function enterStudio() {
   audio.unlock();
   performance.mark('studio-load-start');
   show('loading');
-  const slow = setTimeout(() => { loading.textContent = ovoPrefs.t('slow'); }, 8000);
+  loading.dataset.ui='loading';loading.textContent=ovoPrefs.t('loading');
+  const slow = setTimeout(() => { loading.dataset.ui='slow';loading.textContent = ovoPrefs.t('slow'); }, 8000);
   let timeout;
   const deadline = new Promise((_,reject) => { timeout=setTimeout(()=>reject(new Error('Studio load timeout')),30000); });
   try {

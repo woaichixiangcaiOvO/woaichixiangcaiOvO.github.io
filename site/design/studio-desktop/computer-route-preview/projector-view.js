@@ -10,6 +10,7 @@
 
   function createFrame(id, onKeyDown, progress) {
     const frame = document.createElement('iframe');
+    frame.dataset.caseLabel=id;
     const restore = id === 'yingyu' && progress ? { progress, ready: false, seeking: false } : null;
     if (restore) frameProgress.set(frame, restore);
     frame.title = window.ovoPrefs.language==='en' ? `${id==='yingyu'?'Yingyu':'Bounce'} case study` : `${works[id].title} · 双语作品案例`;
@@ -72,7 +73,7 @@
     curtain.dataset.uiLabel='catalog';
     curtain.innerHTML = `
       <div class="case-content" id="projector-case"></div>
-      <nav class="film" aria-label="作品胶片"><ul class="film-track"></ul></nav>
+      <nav class="film" data-ui-label="film" aria-label="作品胶片"><ul class="film-track"></ul></nav>
       <button class="curtain-close" type="button" data-ui-label="curtain" aria-label="关闭幕布" autofocus>×</button>`;
     const content = curtain.querySelector('.case-content');
     const film = curtain.querySelector('.film-track');
