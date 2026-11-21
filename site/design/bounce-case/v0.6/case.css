@@ -1,0 +1,65 @@
+.gym-panorama {
+  display: grid;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  height: clamp(270px, 49vw, 680px);
+  overflow: clip;
+  background: #fdfcec;
+}
+
+.gym-panorama img {
+  width: auto;
+  height: 85%;
+  max-width: 92%;
+  object-fit: contain;
+}
+
+@keyframes gym-screen-in {
+  from { transform: translateY(var(--gym-offset)); opacity: .5; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes gym-pan-through {
+  from { transform: translateY(-3.5%) scale(1.08); }
+  to { transform: translateY(2.5%) scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .title-row { animation: none; }
+  .metadata { animation: none; }
+
+  @supports (animation-timeline: view()) {
+    .gym-spread { view-timeline-name: --gym-spread; }
+    .gym-spread figure {
+      animation: gym-screen-in ease-out both;
+      animation-timeline: --gym-spread;
+    }
+    .gym-spread figure:first-child { --gym-offset: 18px; animation-range: entry 0% entry 65%; }
+    .gym-spread figure:last-child { --gym-offset: 46px; animation-range: entry 8% entry 92%; }
+
+    .gym-panorama { view-timeline-name: --gym-panorama; }
+    .gym-panorama img {
+      animation: gym-pan-through linear both;
+      animation-timeline: --gym-panorama;
+      animation-range: entry 0% exit 70%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .text-prepared .text-glyph { position: relative; opacity: 0; }
+  .text-entered .text-glyph {
+    animation: text-slide-in var(--glyph-duration, 330ms) cubic-bezier(.18, .72, .25, 1) var(--glyph-delay) both;
+  }
+  #title { --glyph-duration: 580ms; --glyph-distance: -.17em; }
+  a:focus-visible .text-glyph { animation: none; opacity: 1; }
+}
+
+@keyframes text-slide-in {
+  from { left: var(--glyph-distance, -.38em); opacity: 0; }
+  to { left: 0; opacity: 1; }
+}
+
+@media print {
+  .text-prepared .text-glyph { animation: none; opacity: 1; }
+}

@@ -1,0 +1,65 @@
+:root { color-scheme: dark; background: #100e0d; color: #f6eee0; }
+* { box-sizing: border-box; }
+body { margin: 0; overflow: hidden; font: 500 15px "Microsoft YaHei", sans-serif; }
+[hidden] { display: none !important; }
+button { font: inherit; color: #f5dfbc; cursor: pointer; }
+button:focus-visible { outline: 2px solid #e8b47c; outline-offset: 5px; }
+#studio, .welcome, .monitor-highlight, .projector-highlight, .window-pull-highlight { position: fixed; inset: 0; width: 100%; height: 100%; }
+#studio { display: block; visibility: hidden; }
+#studio[data-prop-cursor="grab"], #studio[data-prop-cursor="grab"] ~ :is(.monitor-hit, .projector-hit) { cursor: grab; }
+#studio[data-prop-cursor="grabbing"] { cursor: grabbing; }
+body:is([data-view="arriving"], [data-view="overview"], [data-view="approaching"], [data-view="desktop"], [data-view="returning"], [data-view="lowering-curtain"], [data-view="raising-curtain"]) #studio { visibility: visible; }
+.welcome { display: grid; place-content: center; justify-items: center; gap: 24px; }
+body:not(:is([data-view="welcome"], [data-view="loading"], [data-view="arriving"], [data-view="error"])) .welcome { visibility: hidden; pointer-events: none; }
+body[data-view="arriving"] .welcome { pointer-events: none; }
+.welcome h1 { margin: 0; font-size: clamp(30px, 4.2vw, 70px); font-weight: 500; letter-spacing: -.04em; }
+.enter, .retry, .leave { border: 0; background: transparent; padding: 9px 12px; }
+.enter { display: grid; justify-items: center; gap: 27px; }
+.lamp-anchor, .entry-light, .lamp { display: block; }
+.lamp { width: 14px; aspect-ratio: 1; border-radius: 50%; background: #ffcf8e; box-shadow: 0 0 25px 6px #ffaf5477; }
+body:is([data-view="loading"], [data-view="arriving"]) .welcome :is(h1, .enter-label) { opacity: 0; }
+body[data-view="error"] .enter { display: none; }
+.loading { position: absolute; top: calc(50% + 80px); margin: 0; color: #dcc6a8; }
+.failure { text-align: center; }
+.retry { text-decoration: underline; text-underline-offset: 4px; }
+.leave {
+  position: fixed; top: 3vh; left: 2.4vw; z-index: 1; border-radius: 5px;
+  background: #17100dde; box-shadow: 0 3px 17px #0004;
+}
+.leave:hover { background: #382b21; }
+.screen-ui { position: fixed; display: grid; place-items: center; overflow: hidden; }
+.desktop-controls { position: absolute; inset: 0; }
+.screen-app { position: absolute; padding: 0; border: 0; background: transparent; }
+.screen-app:focus-visible { outline: none; }
+.screen-app .tile { position: absolute; inset: 0 0 auto; border-radius: 22%; }
+.screen-app:is(:hover, :focus-visible) .tile { box-shadow: 0 0 0 2px #fff9, 0 0 11px #fff5; }
+.screen-app:focus-visible .tile { outline: 2px solid #fff; outline-offset: 2px; }
+.window-status { position: fixed; width: 1px; height: 1px; margin: -1px; clip-path: inset(50%); overflow: hidden; }
+.studio-sound { position: fixed; right: max(20px, 2.4vw); bottom: max(20px, 3vh); display: flex; gap: 8px; }
+.studio-sound button {
+  min-width: 68px; min-height: 42px; padding: 8px 15px;
+  border: 1px solid #e7ce9c52; border-radius: 7px;
+  background: #17100de8; color: #f6eee0;
+}
+.studio-sound button:is(:hover, [aria-pressed="true"]) { background: #382b21; border-color: #e7ce9ca0; }
+.studio-sound button:disabled { opacity: .65; cursor: default; }
+.studio-sound button[aria-disabled="true"] { opacity: .65; cursor: progress; }
+#studio[data-resetting] ~ :is(.monitor-hit, .projector-hit, .window-pull) { visibility: hidden; }
+.monitor-hit, .projector-hit, .window-pull { position: fixed; padding: 0; border: 0; background: transparent; }
+.monitor-highlight, .projector-highlight, .window-pull-highlight { pointer-events: none; overflow: visible; opacity: 0; }
+.monitor-highlight polygon {
+  fill: none; stroke: #fff6e7; stroke-width: 1.6;
+  filter: drop-shadow(0 0 3px #fff7) drop-shadow(0 0 5px #fff7);
+}
+.monitor-hit:is(:hover, :focus-visible) + .monitor-highlight { opacity: 1; }
+.projector-hit:is(:hover, :focus-visible) + .projector-highlight { opacity: 1; }
+.window-pull-highlight g { fill: none; stroke: white; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: hover) {
+  .window-pull:hover + .window-pull-highlight { opacity: 1; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .welcome :is(h1, .enter-label) { transition: opacity 180ms ease-out; }
+  .lamp { animation: breathe 2.4s ease-in-out infinite alternate; }
+  .monitor-highlight, .projector-highlight, .window-pull-highlight { transition: opacity 150ms ease-out; }
+  @keyframes breathe { from { opacity: .55; transform: scale(.85); } to { opacity: 1; transform: scale(1.07); } }
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>映遇 · 作品案例</title>
+  <link rel="stylesheet" href="../v0.3/case.css">
+  <link rel="stylesheet" href="../v0.4/case.css">
+  <link rel="stylesheet" href="../v0.5/case.css">
+  <link rel="stylesheet" href="../v0.6/case.css">
+  <link rel="stylesheet" href="case.css">
+  <script src="../v0.6/case.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="wordmark">OvO <span class="crumb" data-en="/ Yingyu">/ 映遇</span></div>
+      <div class="languages" role="group" aria-label="语言" data-en-label="Language">
+        <button type="button" lang="zh-CN" data-language="zh-CN" aria-pressed="true">中文</button>
+        <button type="button" lang="en" data-language="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+  <main class="case-grid">
+    <aside class="project stationary" aria-labelledby="project-title">
+      <p class="eyebrow" data-en="Personal project · UX/UI">个人项目 · UI / UX</p>
+      <h1 id="project-title" data-en="Yingyu">映遇</h1>
+      <p class="subtitle" data-en="A movie discovery app">电影发现与观影规划</p>
+      <dl class="metadata">
+        <div><dt data-en="Role">角色</dt><dd data-en="UI &amp; interaction design">界面与交互设计</dd></div>
+        <div><dt data-en="Scope">范围</dt><dd data-en="Discovery &amp; viewing plans">电影发现与观影规划</dd></div>
+        <div><dt data-en="Output">产出</dt><dd data-en="Mobile interaction prototype">移动端交互原型</dd></div>
+      </dl>
+      <button class="demo-link" type="button" aria-controls="demo"><span data-en="Watch the demo">看操作演示</span><span aria-hidden="true">↘</span></button>
+      <p class="runtime" data-en="Prototype walkthrough · 4:55">原型演示 · 4 分 55 秒</p>
+    </aside>
+
+    <aside class="synopsis stationary" aria-label="项目简介" data-en-label="Project overview">
+      <p class="lead" data-en="Find the film. Make a plan to see it.">从发现电影，到安排一次观影。</p>
+      <p data-en="Sometimes all you remember is a clip. In Yingyu, you can start with that clip, a search, or the discovery feed, check the film, and save it to your viewing plan.">有时只记得一个片段。映遇让你从片段、关键词或发现首页出发，确认是哪部电影后，再把它加进观影计划。</p>
+      <p data-en="When you’re ready to go, compare two showtime options side by side without losing either set of filters.">真要去看时，可以把两组场次并排放，保留各自的筛选条件再比较。</p>
+    </aside>
+
+    <article class="visuals" aria-labelledby="project-title" tabindex="0">
+      <figure class="cover-deck">
+        <div class="deck-stage">
+          <div class="deck-card card-discovery" tabindex="0">
+            <img src="../v0.1/assets/discovery.png" alt="发现电影" data-en-alt="Discover films" width="780" height="1688">
+          </div>
+          <div class="deck-card card-comparison" tabindex="0" data-front>
+            <img src="../v0.1/assets/comparison.png" alt="双栏选场" data-en-alt="Compare showtimes" width="780" height="1688">
+          </div>
+          <div class="deck-card card-recognition" tabindex="0">
+            <img src="../v0.1/assets/recognition.png" alt="片段找片" data-en-alt="Find a film from a clip" width="780" height="1688">
+          </div>
+        </div>
+      </figure>
+
+      <section class="chapter first-chapter" id="tasks" aria-labelledby="tasks-title">
+        <p class="eyebrow" data-en="01 · Viewer tasks">01 · 观影任务</p>
+        <h2 id="tasks-title" data-en="What if all you remember is a clip?">只记得一个片段，怎么找到那部电影？</h2>
+        <p data-en="Finding the title is only the first step. In Yingyu, you can check the match, save the film for later, and compare showtimes when you’re ready to go.">找到片名只是第一步。确认影片后，可以先把它存下来，等想去影院时再比较场次。</p>
+        <ol class="tasks">
+          <li><h3 data-en="Identify the film">确认是哪部电影</h3><p data-en="Use the clip as a clue, then check whether the suggested film matches.">用片段作线索，核对候选结果是不是自己记得的那部。</p></li>
+          <li><h3 data-en="Save it for later">先存下想看的片</h3><p data-en="Add the film to your viewing plan without choosing a showtime yet.">先加进观影计划，不用当场选好时间。</p></li>
+          <li><h3 data-en="Choose a showtime">比较哪一场合适</h3><p data-en="Compare two options by time, cinema, and price before deciding.">选之前把时间、影院和价格放一起比较。</p></li>
+        </ol>
+      </section>
+
+      <section class="chapter" id="decisions" aria-labelledby="decisions-title">
+        <p class="eyebrow" data-en="02 · Design decisions">02 · 设计取舍</p>
+        <h2 id="decisions-title" data-en="Make room to double-check">两处需要停下来核对的地方</h2>
+        <div class="decision-list">
+          <div><h3 data-en="Show the clip beside the candidate">线索和候选结果留在一起</h3><p data-en="A suggested title isn’t a confirmed match. Keeping the source clip on the same screen gives you something to check against. If it doesn’t match, you can try another clip or switch to search.">候选不一定是对的。核对页保留原片段，可以对照着确认；如果不是那部电影，可以换素材，或改用关键词搜。</p></div>
+          <div><h3 data-en="Keep both showtime options visible">让两组场次一直并排可见</h3><p data-en="Each column keeps its own date and filters, so you can compare times, cinemas, and prices without flipping between lists or rebuilding the first option.">A、B 两栏各自保留日期与筛选条件。换一组时，另一组不丢，时间、影院和价格可以直接对照。</p></div>
+        </div>
+      </section>
+
+      <section class="chapter" id="screens" aria-labelledby="screens-title">
+        <p class="eyebrow" data-en="03 · Interface">03 · 界面展示</p>
+        <h2 id="screens-title" data-en="Six screens from discovery to showtimes">从发现新片，到决定去哪一场</h2>
+        <div class="screen-grid">
+          <figure><img width="780" height="1688" src="../v0.1/assets/discovery.png" alt="影片发现首页" data-en-alt="Movie discovery home screen"><figcaption data-en="Discover · Start from the home screen">发现 · 从首页找到感兴趣的片</figcaption></figure>
+          <figure><img width="335" height="725" src="../v0.5/screen-mood.jpg" alt="按心情选片的界面" data-en-alt="Screen for choosing a mood"><figcaption data-en="Mood · Browse by how you want to feel">心情选片 · 先选今天想看的感觉</figcaption></figure>
+          <figure><img width="780" height="1688" src="../v0.1/assets/recognition.png" alt="片段与候选结果同屏的核对页" data-en-alt="Source material and suggested film on the same screen"><figcaption data-en="Check · Review the clue and candidate together">核对 · 同时查看线索和候选</figcaption></figure>
+          <figure><img width="335" height="725" src="../v0.5/screen-details.jpg" alt="先展示无剧透简介的影片详情" data-en-alt="Film details with a spoiler-free synopsis"><figcaption data-en="Film details · Read the spoiler-free synopsis first">影片详情 · 先看无剧透简介</figcaption></figure>
+          <figure><img width="335" height="725" src="../v0.5/screen-plan.jpg" alt="区分想看与已安排的观影计划" data-en-alt="Viewing plan with separate saved and scheduled lists"><figcaption data-en="Viewing plan · Save now, schedule later">观影计划 · 想看的片先存下来</figcaption></figure>
+          <figure><img width="780" height="1688" src="../v0.1/assets/comparison.png" alt="A、B 两列场次对比" data-en-alt="Showtime options A and B side by side"><figcaption data-en="Compare · Keep options A and B in view">选场 · A、B 两组方案并排看</figcaption></figure>
+        </div>
+        <p class="prototype-note" data-en="This is an interaction prototype. Recognition, recommendations, and showtimes are demonstrated with sample data, not live services.">这是交互原型。识别、推荐与场次用于演示流程，未接入实际服务。</p>
+      </section>
+
+      <section class="chapter" id="journeys" aria-labelledby="journeys-title">
+        <p class="eyebrow" data-en="04 · Prototype flows">04 · 原型流程</p>
+        <h2 id="journeys-title" data-en="From browsing to making a plan">从随便看看，到决定哪天去看</h2>
+        <div class="journey-list">
+          <section class="journey" id="journey-discovery" aria-labelledby="journey-discovery-title">
+            <div class="journey-copy">
+              <h3 id="journey-discovery-title" data-en="Start with what you’re in the mood for">没想好看什么，就从今天的心情出发</h3>
+              <p data-en="You don’t need a title to start browsing. The prototype lets you pick a mood, see the suggestions, and change the mood if nothing looks right.">手里没有片名，也能先挑一个符合当下心情的选项，看看推荐。如果没看到想看的，就换个条件再试。</p>
+            </div>
+            <figure>
+              <img src="../v0.4/discovery-mood.jpg" width="960" height="540" loading="lazy" alt="原型演示中的心情选片界面与选项" data-en-alt="Mood options in the movie discovery walkthrough">
+              <figcaption data-en="From the walkthrough: picking a mood to start browsing.">原型演示：从心情选项进入推荐。</figcaption>
+            </figure>
+          </section>
+          <section class="journey" id="journey-confirm" aria-labelledby="journey-confirm-title">
+            <div class="journey-copy">
+              <h3 id="journey-confirm-title" data-en="Check the film without spoiling it">确认是这部电影，也不用先看剧透</h3>
+              <p data-en="If the clip matches, open the film page to see its basic details and a spoiler-free overview. The full plot is a separate, labeled choice.">片段对上候选后，进详情就能先看基本资料和无剧透简介。想了解完整剧情时，再点标明含剧透的入口。</p>
+            </div>
+            <figure>
+              <img src="../v0.4/spoiler-free.jpg" width="960" height="540" loading="lazy" alt="原型演示中分开的无剧透简介和含剧透剧情入口" data-en-alt="Spoiler-free overview and a separate entry to the full plot in the walkthrough">
+              <figcaption data-en="From the walkthrough: the spoiler-free overview comes first.">原型演示：默认先看无剧透简介。</figcaption>
+            </figure>
+          </section>
+          <section class="journey" id="journey-plan" aria-labelledby="journey-plan-title">
+            <div class="journey-copy">
+              <h3 id="journey-plan-title" data-en="Save it now, compare dates later">今天先收藏，哪天去看以后再定</h3>
+              <p data-en="The viewing plan separates films you’ve saved from those you’ve already scheduled. Open a saved film when you’re ready to decide, then compare dates and showtimes in A and B.">观影计划把「想看」跟「已安排」分开。拿《星际穿越》为例，先收进计划；真要安排时，再去 A、B 两栏比较哪天、哪一场合适。</p>
+            </div>
+            <figure>
+              <img src="../v0.4/viewing-plan.jpg" width="960" height="540" loading="lazy" alt="原型演示中的观影计划与已加入计划的《星际穿越》" data-en-alt="Interstellar saved in the viewing plan in the walkthrough">
+              <figcaption data-en="From the walkthrough: Interstellar is saved before a showtime is set.">原型演示：《星际穿越》已加入计划，还没定场次。</figcaption>
+            </figure>
+          </section>
+        </div>
+      </section>
+
+      <section class="chapter demo" id="demo" tabindex="-1" aria-labelledby="demo-title">
+        <p class="eyebrow" data-en="05 · Prototype walkthrough">05 · 操作演示</p>
+        <h2 id="demo-title" data-en="From finding a film to choosing a showtime">从找片到选场</h2>
+        <video controls playsinline preload="metadata" poster="../v0.2/demo-poster.jpg" src="../v0.1/assets/yingyu-prototype.mp4" aria-label="映遇原型操作演示" data-en-label="Yingyu prototype walkthrough"></video>
+        <p class="video-error" hidden><span data-en="The video couldn’t load.">视频暂时无法加载。</span> <a href="../v0.1/assets/yingyu-prototype.mp4" data-en="Open the video file">直接打开视频文件</a></p>
+        <div id="english-guide" class="guide" lang="en" hidden>
+          <h3>Jump to a chapter</h3>
+          <ol>
+            <li><button type="button" data-seconds="40" aria-label="Jump to 00:40, Find a film from a clip">00:40</button><div><strong>Find a film from a clip</strong><p>Use a clip as a clue and check the suggested title against it.</p></div></li>
+            <li><button type="button" data-seconds="175" aria-label="Jump to 02:55, Viewing plan">02:55</button><div><strong>Viewing plan</strong><p>See where a film you want to watch sits in your viewing plan.</p></div></li>
+            <li><button type="button" data-seconds="195" aria-label="Jump to 03:15, Compare showtimes">03:15</button><div><strong>Compare showtimes</strong><p>See how two sets of showtimes can be compared side by side.</p></div></li>
+          </ol>
+          <p class="seek-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+    </article>
+  </main>
+</body>
+</html>

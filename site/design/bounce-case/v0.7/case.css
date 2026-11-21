@@ -1,0 +1,29 @@
+:root { scrollbar-width: none; }
+
+.masthead-actions, .language-switch { display: flex; align-items: center; flex-wrap: wrap; }
+.masthead-actions { justify-content: flex-end; column-gap: clamp(14px, 3vw, 44px); row-gap: 5px; }
+.language-switch { gap: 5px; }
+.language-switch button {
+  border: 0; padding: 4px 6px; background: transparent; color: var(--muted);
+  font: inherit; font-size: 13px; cursor: pointer;
+}
+.language-switch button[aria-pressed="true"] { color: var(--ink); box-shadow: inset 0 -1px currentColor; }
+.language-switch button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
+.english-subtitle[hidden] { display: none; }
+.title-row .english-subtitle { margin-top: .45em; padding: 0; font: 16px/1.4 "Segoe UI", sans-serif; color: var(--muted); }
+html[lang="en"] { font-family: "Segoe UI", sans-serif; --serif: Georgia, serif; }
+html[lang="en"] h1 { font-size: clamp(70px, 10vw, 155px); }
+html[lang="en"] h2 { font-size: clamp(31px, 3.8vw, 60px); }
+html[lang="en"] .metadata dd { max-width: 52ch; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .text-prepared.text-settled .text-glyph { animation: none; opacity: 1; }
+  button:focus-visible .text-glyph { animation: none; opacity: 1; }
+}
+
+@media (max-width: 670px) {
+  .masthead nav { column-gap: 11px; }
+  .masthead nav a { font-size: 12px; }
+  html[lang="en"] h1 { font-size: clamp(65px, 16vw, 104px); }
+}

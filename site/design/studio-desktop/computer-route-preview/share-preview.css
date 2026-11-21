@@ -1,0 +1,22 @@
+.share-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px clamp(8px, 1.7vw, 24px);
+}
+.share-studio {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 3px 11px;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 999px;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.share-studio:hover { background: color-mix(in srgb, currentColor 6%, transparent); }
+.share-studio:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }

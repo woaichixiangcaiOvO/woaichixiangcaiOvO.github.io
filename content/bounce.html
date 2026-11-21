@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>蹦动 · OvO</title>
+  <link rel="stylesheet" href="../v0.2/case.css">
+  <link rel="stylesheet" href="../v0.4/case.css">
+  <link rel="stylesheet" href="../v0.6/case.css">
+  <link rel="stylesheet" href="case.css">
+  <script defer src="case.js"></script>
+</head>
+<body id="top">
+  <header class="masthead">
+    <span class="brand">OvO</span>
+    <div class="masthead-actions">
+      <nav aria-label="案例章节" data-en-label="Case study sections">
+      <a href="#training" data-en="Workouts">训练</a>
+      <a href="#gym" data-en="Gym">健身房</a>
+      <a href="#collection" data-en="Collection">收藏</a>
+      </nav>
+      <div class="language-switch" role="group" aria-label="语言" data-en-label="Language">
+        <button type="button" lang="zh-CN" data-language="zh-CN" aria-pressed="true">中文</button>
+        <button type="button" lang="en" data-language="en" aria-pressed="false">EN</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="frame intro" aria-labelledby="title">
+      <div class="title-row">
+        <div>
+          <h1 id="title" data-en="Bounce">蹦动</h1>
+          <p class="english-subtitle" lang="en" hidden>A gamified fitness app</p>
+        </div>
+        <p data-en="Work out, earn rewards,&lt;br&gt;and make the gym your own.">跟练拿奖励，<br>慢慢布置自己的健身房。</p>
+      </div>
+      <dl class="metadata">
+        <div><dt data-en="Overview">项目简介</dt><dd data-en="Follow a workout at home, open a reward pack when you finish, and use the equipment and decorations you earn to furnish your gym.">在家跟练，完成训练后开奖励，再用获得的器材和装饰布置自己的健身房。</dd></div>
+        <div><dt data-en="My role">我的职责</dt><dd data-en="Interface and interaction design">界面与交互设计</dd></div>
+        <div><dt data-en="Project type">项目类型</dt><dd data-en="Fitness app concept">健身应用概念</dd></div>
+      </dl>
+    </section>
+
+    <figure class="hero" aria-label="蹦动界面总览" data-en-label="Bounce interface overview">
+      <div class="hero-deck">
+        <div class="hero-card card-workout">
+          <img src="../../studio-projector/v0.6/assets/bounce-workout.png" width="829" height="1897" alt="跟练界面：小蹦示范开合跳" data-en-alt="Workout screen showing the Bounce mascot demonstrating jumping jacks">
+        </div>
+        <div class="hero-card card-rewards">
+          <img src="../../studio-projector/v0.6/assets/bounce-rewards.png" width="830" height="1895" alt="训练奖励包与获得的新物件" data-en-alt="Workout reward pack and the item earned">
+        </div>
+        <div class="hero-card card-home">
+          <img src="../../studio-projector/v0.6/assets/bounce-home.png" width="830" height="1896" alt="3D 健身房首页：布置好的房间和伙伴" data-en-alt="3D gym home screen showing the furnished room and companions">
+        </div>
+      </div>
+    </figure>
+
+    <section class="frame chapter" id="flow" aria-labelledby="flow-title">
+      <header class="chapter-head">
+        <p class="section-label" data-en="The core loop">核心体验</p>
+        <h2 id="flow-title" data-en="Finish a workout,&lt;br&gt;add something to your gym.">练完了，<br>健身房又能添点新东西。</h2>
+        <p data-en="Finish a session to see what you earned. Tap “Place in my gym” to find a spot for your new item.">训练结束后，奖励页会展示新物件。点「立即布置到健身房」，就能给它找个位置。</p>
+      </header>
+      <div class="screens">
+        <figure class="reveal">
+          <span class="screen-image"><img src="../../studio-projector/v0.6/assets/bounce-workout.png" alt="小蹦示范开合跳，顶部显示训练组数" data-en-alt="Jumping-jack demonstration with the number of sets shown above"></span>
+          <figcaption><strong data-en="Follow the workout">跟练</strong><span data-en="Follow the exercise demo and countdown to finish the session.">跟着动作示范和倒计时完成训练。</span></figcaption>
+        </figure>
+        <figure class="reveal">
+          <span class="screen-image"><img src="../../studio-projector/v0.6/assets/bounce-rewards.png" alt="奖励包内的晴空运动垫和立即布置按钮" data-en-alt="Reward pack showing a blue exercise mat and a button to place it in the gym"></span>
+          <figcaption><strong data-en="Open the reward pack">开奖励</strong><span data-en="Open the workout reward pack to add your new item to the collection.">打开训练奖励包，把新物件加入收藏。</span></figcaption>
+        </figure>
+        <figure class="reveal">
+          <span class="screen-image"><img src="../v0.1/assets/gym-layout.png" alt="在 2D 布置界面中移动和旋转健身房器材" data-en-alt="Moving and rotating gym equipment on the 2D floor plan"></span>
+          <figcaption><strong data-en="Furnish your gym">布置健身房</strong><span data-en="Pick an item from your collection and place it in the floor plan.">从收藏挑选物件，在平面视图里找好位置。</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="training chapter" id="training" aria-labelledby="training-title">
+      <div class="frame">
+        <header class="chapter-head">
+          <p class="section-label" data-en="The workout experience">训练体验</p>
+          <h2 id="training-title" data-en="Plan your exercises.&lt;br&gt;Then focus on this set.">开练前选好动作，<br>练起来只看眼前这组。</h2>
+          <p data-en="Choose a class or put together your own routine. Once you start, the workout screen shows the exercise demo, countdown, and what’s up next.">训练前可以按需求找课程，也可以组合动作。开始后，把示范、倒计时和下一组提示留在跟练界面。</p>
+        </header>
+        <div class="screens">
+          <figure class="reveal"><span class="screen-image"><img src="../v0.1/assets/training-discovery.png" alt="训练发现" data-en-alt="Workout discovery screen"></span><figcaption><strong data-en="Find a class">找课程</strong><span data-en="Browse workouts and pick one for today.">浏览训练内容，选出今天想练的项目。</span></figcaption></figure>
+          <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/training-builder.png" alt="创建训练组合" data-en-alt="Custom routine builder"></span><figcaption><strong data-en="Build a routine">排动作</strong><span data-en="Choose the exercises you want and put them together.">自己选动作，组成一套训练。</span></figcaption></figure>
+          <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/training-ready.png" alt="训练准备" data-en-alt="Pre-workout overview"></span><figcaption><strong data-en="Get ready">准备开练</strong><span data-en="Review the session before you start.">开始前查看本次训练安排。</span></figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="gym chapter" id="gym" aria-labelledby="gym-title">
+      <div class="frame">
+        <header class="chapter-head">
+          <p class="section-label" data-en="Gym">健身房</p>
+          <h2 id="gym-title" data-en="Arrange it in 2D.&lt;br&gt;See the whole room in 3D.">在平面里摆好，<br>回到 3D 看整个房间。</h2>
+          <p data-en="Move and rotate equipment in a top-down view. Back on the home screen, see the room in 3D with your companions inside.">布置时俯看整个地面，移动和旋转器材。回到首页，就能看到摆好的房间和里面的伙伴。</p>
+        </header>
+        <div class="gym-spread">
+          <figure><span class="screen-image"><img src="../v0.1/assets/gym-layout.png" alt="俯视布局和器材选择" data-en-alt="Top-down gym layout and equipment picker"></span><figcaption data-en="2D floor plan">2D 布置</figcaption></figure>
+          <figure><span class="screen-image"><img src="../../studio-projector/v0.6/assets/bounce-home.png" alt="展示布置效果和在场伙伴的 3D 健身房首页" data-en-alt="Furnished 3D gym and its companions on the home screen"></span><figcaption data-en="3D gym">3D 健身房</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <figure class="gym-panorama">
+      <img src="../v0.5/gym-scene.png" width="830" height="712" alt="健身房场景特写：小蹦在跑步，兔子跳绳，猫咪在拉伸" data-en-alt="Gym close-up with the mascot running, a rabbit jumping rope, and a cat stretching">
+    </figure>
+
+    <section class="frame chapter" id="collection" aria-labelledby="collection-title">
+      <header class="chapter-head">
+        <p class="section-label" data-en="Collection and companions">收藏与伙伴</p>
+        <h2 id="collection-title" data-en="What’s in your gym?&lt;br&gt;Who’s there with you?">房间里摆了什么，<br>又有哪些伙伴？</h2>
+        <p data-en="Find your equipment and decorations in the collection, and browse your companions in a separate guide.">器材和装饰集中在收藏里，伙伴图鉴可以单独翻看。回到房间之前，先看看自己已经收集了什么。</p>
+      </header>
+      <div class="screens">
+        <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/collection.png" alt="器材与装饰收藏界面" data-en-alt="Equipment and decor collection"></span><figcaption><strong data-en="Equipment and decor">器材和装饰</strong><span data-en="See all the items you’ve collected in one place.">集中查看已收集的物件。</span></figcaption></figure>
+        <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/companions.png" alt="伙伴图鉴界面" data-en-alt="Companion guide screen"></span><figcaption><strong data-en="Companion guide">伙伴图鉴</strong><span data-en="Browse the different companions.">浏览不同的伙伴。</span></figcaption></figure>
+        <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/companion-detail.png" alt="伙伴详情界面" data-en-alt="Companion profile screen"></span><figcaption><strong data-en="Companion details">伙伴详情</strong><span data-en="Take a closer look at each companion and read their profile.">单独查看一个伙伴的样子和资料。</span></figcaption></figure>
+      </div>
+    </section>
+
+    <section class="training chapter" id="review" aria-labelledby="review-title">
+      <div class="frame">
+        <header class="chapter-head">
+          <p class="section-label" data-en="Workout recap">训练回顾</p>
+          <h2 id="review-title" data-en="See what’s next.&lt;br&gt;Look back on what you did.">下一组怎么练，<br>这次练了什么。</h2>
+          <p data-en="Use the break to check the next set. When you finish, review the session and revisit it later in your workout log.">组间休息留给眼前的下一组，结束总结记录这一次的训练。以后想回顾，可以再翻训练日志。</p>
+        </header>
+        <div class="screens">
+          <figure class="reveal"><span class="screen-image"><img src="../v0.1/assets/training-rest.png" alt="组间休息和下一组提示" data-en-alt="Rest timer and next-set preview"></span><figcaption><strong data-en="Rest between sets">组间休息</strong><span data-en="Check the timer and preview the next exercise.">看倒计时，提前知道下一组动作。</span></figcaption></figure>
+          <figure class="reveal"><span class="screen-image"><img src="../v0.1/assets/training-summary.png" alt="训练完成总结" data-en-alt="Completed workout summary"></span><figcaption><strong data-en="Session summary">本次总结</strong><span data-en="Review the workout you just finished.">回顾刚刚完成的训练。</span></figcaption></figure>
+          <figure class="reveal"><span class="screen-image"><img src="../v0.2/assets/training-log.png" alt="训练日志界面" data-en-alt="Workout log screen"></span><figcaption><strong data-en="Workout log">训练日志</strong><span data-en="Look back at previous sessions.">回看过往的训练记录。</span></figcaption></figure>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="frame footer"><span class="brand">OvO</span><a href="#top" data-en="Back to top ↑">回到顶部 ↑</a></footer>
+</body>
+</html>

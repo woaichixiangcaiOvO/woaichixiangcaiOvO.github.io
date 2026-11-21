@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OvO · 个人作品网站</title>
+  <link rel="stylesheet" href="./design/studio-projector/yingyu-projector-preview/curtain.css">
+  <link rel="stylesheet" href="./design/studio-desktop/computer-route-preview/projector.css">
+  <link rel="stylesheet" href="./design/studio-desktop/yingyu-window-preview/case-window.css">
+  <link rel="stylesheet" href="./design/studio-desktop/three-preview/preview.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/build/three.module.js",
+        "three/addons/": "./vendor/three/examples/jsm/",
+        "@dimforge/rapier3d-compat": "./vendor/@dimforge/rapier3d-compat/dist/rapier.mjs"
+      }
+    }
+  </script>
+  <script src="./design/studio-desktop/yingyu-window-preview/case-source.js" defer></script>
+  <script src="./design/studio-desktop/bounce-window-preview/case-source.js" defer></script>
+  <script src="./design/studio-desktop/computer-route-preview/projector-view.js" defer></script>
+  <script src="./design/studio-desktop/computer-route-preview/case-window.js" defer></script>
+  <script type="module" src="./design/studio-desktop/three-preview/preview.js"></script>
+</head>
+<body data-view="welcome">
+  <main>
+    <canvas id="studio" aria-label="工作室 3D 画面"></canvas>
+    <section class="welcome" aria-label="欢迎">
+      <h1>你好，我是OvO</h1>
+      <button class="enter" type="button">
+        <span class="lamp-anchor" aria-hidden="true">
+          <span class="entry-light"><span class="lamp"></span></span>
+        </span>
+        <span class="enter-label">进入工作室 →</span>
+      </button>
+      <p class="loading" role="status" hidden>正在准备工作室</p>
+      <div class="failure" hidden>
+        <p role="alert">工作室未能加载。请确认 Edge 可以使用 WebGL。</p>
+        <button class="retry" type="button">重试</button>
+      </div>
+    </section>
+    <button class="monitor-hit" type="button" aria-label="打开电脑" hidden></button>
+    <svg class="monitor-highlight" aria-hidden="true"><polygon></polygon></svg>
+    <button class="projector-hit" type="button" aria-label="打开放映机" aria-haspopup="dialog" aria-controls="projector-curtain" hidden></button>
+    <svg class="projector-highlight" aria-hidden="true">
+      <defs>
+        <filter id="projector-halo" x="-25%" y="-25%" width="150%" height="150%">
+          <feMorphology in="SourceAlpha" operator="dilate" radius="1.5" result="expanded"/>
+          <feComposite in="expanded" in2="SourceAlpha" operator="out" result="edge"/>
+          <feFlood flood-color="#fff6e7"/>
+          <feComposite in2="edge" operator="in" result="rim"/>
+          <feGaussianBlur in="rim" stdDeviation="2.6" result="halo"/>
+          <feMerge><feMergeNode in="halo"/><feMergeNode in="rim"/></feMerge>
+        </filter>
+      </defs>
+      <g fill="white" filter="url(#projector-halo)"></g>
+    </svg>
+    <button class="window-pull" type="button" aria-label="窗边拉绳" hidden></button>
+    <svg class="window-pull-highlight" aria-hidden="true">
+      <defs>
+        <filter id="window-pull-glow" filterUnits="userSpaceOnUse" x="0" y="0" width="100%" height="100%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="tight"/>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="soft"/>
+          <feMerge><feMergeNode in="soft"/><feMergeNode in="soft"/><feMergeNode in="tight"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <g filter="url(#window-pull-glow)"><polyline></polyline><polygon></polygon></g>
+    </svg>
+    <p class="window-status" role="status"></p>
+    <div class="studio-sound" hidden>
+      <button class="sound-enable" type="button" hidden>点击启用声音</button>
+      <button class="sound-toggle" type="button" aria-label="静音场景音效" aria-pressed="false">静音</button>
+      <button class="prop-reset" type="button">复位道具</button>
+    </div>
+    <section class="screen-ui" aria-label="电脑屏幕" hidden>
+      <div class="desktop-controls"></div>
+    </section>
+    <button class="leave" type="button" hidden>← 回到工作室</button>
+  </main>
+</body>
+</html>

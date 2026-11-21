@@ -1,0 +1,63 @@
+.hero {
+  background: linear-gradient(90deg, #123729, #174435 45%, #123729);
+}
+
+.hero-deck {
+  position: relative;
+  isolation: isolate;
+  height: clamp(270px, 59vw, 880px);
+  background: radial-gradient(ellipse at 50% 24%, #285e48, #194736 49%, #12372b 84%);
+}
+
+.hero-card {
+  position: absolute;
+  z-index: var(--layer);
+  top: var(--top);
+  left: var(--left);
+  width: min(24%, 20.25vw, 300px);
+  transform: translateX(-50%) rotate(var(--angle));
+}
+
+.card-workout { --left: 33%; --top: 13.5%; --angle: -10deg; --straighten: 7deg; --layer: 1; }
+.card-home { --left: 50%; --top: 9%; --angle: 1deg; --straighten: -1deg; --layer: 3; }
+.card-rewards { --left: 67%; --top: 14.5%; --angle: 10deg; --straighten: -7deg; --layer: 2; }
+
+.hero .hero-card img {
+  animation: none;
+  pointer-events: none;
+  border-radius: clamp(7px, 1.55vw, 22px);
+  box-shadow: 0 16px 38px #061b1490;
+}
+
+.screen-image { display: block; }
+
+@media (hover: hover) and (pointer: fine) {
+  .hero-card:hover { z-index: 5; }
+  .hero-card:hover img { box-shadow: 0 26px 54px #061b14bb; }
+  .screen-image:hover img { box-shadow: 0 20px 40px #0e2b2057; }
+  .gym .screen-image:hover img { box-shadow: 0 29px 59px #061b14b0; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .hero-deck { animation: unfold linear both; animation-timeline: view(); animation-range: entry 0% entry 100%; }
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .hero-card { transition: z-index 240ms step-end; }
+    .hero-deck:has(.hero-card:hover) .hero-card { transition: none; }
+    .hero .hero-card img {
+      transition: transform 240ms cubic-bezier(.26, .08, .26, 1), box-shadow 220ms ease-out;
+      transform-origin: 50% 24%;
+    }
+    .hero-card:hover img {
+      transform: translateY(clamp(-36px, -2.4vw, -12px)) rotate(var(--straighten)) scale(1.12);
+    }
+    .screen-image img { transition: transform 180ms ease-out, box-shadow 180ms ease-out; }
+    .screen-image:hover img { transform: translateY(-4px) scale(1.032); }
+  }
+}
+
+@media (max-width: 620px) {
+  .hero-card { width: min(24%, 115px); }
+}
