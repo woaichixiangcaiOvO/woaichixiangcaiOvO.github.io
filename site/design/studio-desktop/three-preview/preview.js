@@ -256,12 +256,16 @@ async function enterStudio() {
     const totalBytes = items.reduce((sum, item) => sum + item.total, 0);
     if (document.body.dataset.view === 'stalled') show('loading');
     setLoadingDetail(() => {
-      const amount = (loadedBytes / 1048576).toFixed(1);
       const percent = totalBytes > 0 ? Math.min(100, Math.round(loadedBytes / totalBytes * 100)) : null;
-      const progress = percent === null ? `${amount} MB` : `${percent}% · ${amount} MB`;
+      if (percent === null) {
+        const amount = (loadedBytes / 1048576).toFixed(1);
+        return ovoPrefs.language === 'en'
+          ? `Preparing the studio · ${amount} MB read`
+          : `正在准备工作室 · 已读取 ${amount} MB`;
+      }
       return ovoPrefs.language === 'en'
-        ? `Preparing the studio · ${progress}`
-        : `正在准备工作室 · ${progress}`;
+        ? `Preparing the studio · ${percent}%`
+        : `正在准备工作室 · ${percent}%`;
     });
   };
   // A quiet connection can be retried, but bytes that are still arriving must not be discarded.
