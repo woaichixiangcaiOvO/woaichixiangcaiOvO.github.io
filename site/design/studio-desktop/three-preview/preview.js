@@ -19,12 +19,10 @@ const pullHandleHighlight = document.querySelector('.window-pull-highlight polyg
 const windowStatus = document.querySelector('.window-status');
 const soundControls = document.querySelector('.studio-sound');
 const soundToggle = document.querySelector('.sound-toggle');
-const soundEnable = document.querySelector('.sound-enable');
 const propReset = document.querySelector('.prop-reset');
 const audio = createMonzaAudio(renderSoundControls);
 const screen = document.querySelector('.screen-ui');
 const desktop = document.querySelector('.desktop-controls');
-const leave = document.querySelector('.leave');
 const { works, mountCaseWindow, mountProjector } = window.studioCaseView;
 let studio;
 let backPending = false;
@@ -37,7 +35,7 @@ const previewOptions = new URLSearchParams(location.search);
 const requestedWindow = previewOptions.get('scene');
 const initialWindow = Object.hasOwn(windowTitles, requestedWindow) ? requestedWindow :
   Math.random() < .5 ? 'orbit' : 'monza';
-const caseWindow = mountCaseWindow({ screen, desktop, leave, onClose: () => goBack('case') });
+const caseWindow = mountCaseWindow({ screen, desktop, onClose: () => goBack('case') });
 const projectorView = mountProjector({
   onPhase: show,
   onClose: () => goBack('projector'),
@@ -87,7 +85,6 @@ function show(view) {
   soundControls.hidden = view !== 'overview';
   renderSoundControls();
   screen.hidden = view !== 'desktop';
-  leave.hidden = view !== 'desktop';
   loading.hidden = view !== 'loading';
   failure.hidden = view !== 'error';
   enter.disabled = view !== 'welcome';
@@ -95,13 +92,12 @@ function show(view) {
 
 function renderSoundControls() {
   const waiting = !audio.muted && audio.status === 'waiting' && canvas.dataset.windowScene === 'monza';
-  const focusToggle = !waiting && document.activeElement === soundEnable;
-  soundEnable.hidden = !waiting;
   soundToggle.disabled = audio.status === 'unavailable';
   soundToggle.setAttribute('aria-pressed', String(audio.muted));
-  soundToggle.textContent = ovoPrefs.t(soundToggle.disabled ? 'unavailable' : audio.muted ? 'muted' : 'mute');
-  soundToggle.setAttribute('aria-label', soundToggle.textContent);
-  if (focusToggle) soundToggle.focus({ preventScroll: true });
+  const label=ovoPrefs.t(soundToggle.disabled ? 'unavailable' : waiting ? 'sound' : audio.muted ? 'muted' : 'mute');
+  soundToggle.setAttribute('aria-label',label);soundToggle.title=label;
+  soundToggle.querySelector('.sound-waves').toggleAttribute('hidden',audio.muted);
+  soundToggle.querySelector('.sound-slash').toggleAttribute('hidden',!audio.muted);
 }
 
 function lightOrigin() {
@@ -320,7 +316,7 @@ async function showStudioEntry(entry) {
     return;
   }
   if (!await caseWindow.close() || navigation !== token) return;
-  (workIcons.get(entry.work) ?? leave).focus({ preventScroll: true });
+  (workIcons.get(entry.work) ?? workIcons.values().next().value).focus({ preventScroll: true });
 }
 
 enter.addEventListener('click', enterStudio);
@@ -330,7 +326,6 @@ function restart(autostart) {
 }
 retry.addEventListener('click', () => restart(true));
 document.querySelector('.welcome-back').addEventListener('click',()=>restart(false));
-document.querySelector('.view-reset').addEventListener('click',()=>studio?.resetView());
 window.addEventListener('ovo-language',()=>{
   renderSoundControls();labelWindowPull();
   monitor.setAttribute('aria-label',ovoPrefs.t('computer'));projector.setAttribute('aria-label',ovoPrefs.t('projector'));
@@ -347,14 +342,23 @@ projector.addEventListener('click', () => {
 });
 windowPull.addEventListener('click', changeWindow);
 propReset.addEventListener('click', resetProps);
-soundEnable.addEventListener('click', audio.unlock);
 soundToggle.addEventListener('click', () => {
+  if(!audio.muted && audio.status==='waiting'){audio.unlock();return;}
   audio.setMuted(!audio.muted);
   if (!audio.muted) audio.unlock();
 });
-leave.addEventListener('click', () => goBack('desktop'));
+function exitComputer() {
+  const entry=currentEntry();
+  if(backPending||document.body.dataset.view!=='desktop'||!['desktop','case'].includes(entry.view))return;
+  backPending=true;pauseStudioVideo();
+  history.go(entry.view==='case'?-2:-1);
+}
+window.addEventListener('click',event=>{
+  if(document.body.dataset.view!=='desktop'||screen.contains(event.target)||event.button!==0)return;
+  event.preventDefault();event.stopPropagation();exitComputer();
+},true);
 window.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !caseWindow.isOpen && document.body.dataset.view === 'desktop') goBack('desktop');
+  if (event.key === 'Escape' && !caseWindow.isOpen && document.body.dataset.view === 'desktop') exitComputer();
 });
 window.addEventListener('popstate', () => {
   backPending = false;

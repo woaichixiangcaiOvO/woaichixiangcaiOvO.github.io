@@ -51,7 +51,7 @@
       frame = undefined;
       content.inert = false;
       desktop.inert = false;
-      leave.inert = false;
+      if(leave)leave.inert = false;
     }
 
     function open(button, progress) {
@@ -64,7 +64,7 @@
       panel.setAttribute('aria-label', window.ovoPrefs.language==='en' ? `${id==='yingyu'?'Yingyu':'Bounce'} case` : `${works[id].title}案例`);
       panel.hidden = false;
       desktop.inert = true;
-      leave.inert = true;
+      if(leave)leave.inert = true;
       focusClose();
       if (!reducedMotion.matches) {
         motion = panel.animate([

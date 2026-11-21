@@ -13,7 +13,7 @@ body:is([data-view="arriving"], [data-view="overview"], [data-view="approaching"
 body:not(:is([data-view="welcome"], [data-view="loading"], [data-view="arriving"], [data-view="error"])) .welcome { visibility: hidden; pointer-events: none; }
 body[data-view="arriving"] .welcome { pointer-events: none; }
 .welcome h1 { margin: 0; font-size: clamp(30px, 4.2vw, 70px); font-weight: 500; letter-spacing: -.04em; }
-.enter, .retry, .leave { border: 0; background: transparent; padding: 9px 12px; }
+.enter, .retry { border: 0; background: transparent; padding: 9px 12px; }
 .enter { display: grid; justify-items: center; gap: 27px; }
 .lamp-anchor, .entry-light, .lamp { display: block; }
 .lamp { width: 14px; aspect-ratio: 1; border-radius: 50%; background: #ffcf8e; box-shadow: 0 0 25px 6px #ffaf5477; }
@@ -22,11 +22,6 @@ body[data-view="error"] .enter { display: none; }
 .loading { position: absolute; top: calc(50% + 80px); margin: 0; color: #dcc6a8; }
 .failure { text-align: center; }
 .retry { text-decoration: underline; text-underline-offset: 4px; }
-.leave {
-  position: fixed; top: 3vh; left: 2.4vw; z-index: 1; border-radius: 5px;
-  background: #17100dde; box-shadow: 0 3px 17px #0004;
-}
-.leave:hover { background: #382b21; }
 .screen-ui { position: fixed; display: grid; place-items: center; overflow: hidden; }
 .desktop-controls { position: absolute; inset: 0; }
 .screen-app { position: absolute; padding: 0; border: 0; background: transparent; }
@@ -37,7 +32,7 @@ body[data-view="error"] .enter { display: none; }
 .window-status { position: fixed; width: 1px; height: 1px; margin: -1px; clip-path: inset(50%); overflow: hidden; }
 .studio-sound { position: fixed; right: max(20px, 2.4vw); bottom: max(20px, 3vh); display: flex; gap: 8px; }
 .studio-sound button {
-  min-width: 68px; min-height: 42px; padding: 8px 15px;
+  min-width: 44px; min-height: 44px; padding: 10px;
   border: 1px solid #e7ce9c52; border-radius: 7px;
   background: #17100de8; color: #f6eee0;
 }
@@ -65,8 +60,11 @@ body[data-view="error"] .enter { display: none; }
 }
 
 .preferences {position:fixed;right:max(20px,2.4vw);bottom:max(20px,3vh);display:flex;gap:8px;z-index:20}
-.preferences button {padding:9px 12px;min-height:42px;background:#17100de8;border:1px solid #e7ce9c52;border-radius:7px}
-body[data-view="overview"] .studio-sound {bottom:calc(max(20px,3vh) + 53px)}
+.preferences button {padding:10px;min-height:44px;background:#17100de8;border:1px solid #e7ce9c52;border-radius:7px}
+body[data-view="overview"] .studio-sound {right:calc(max(20px,2.4vw) + 52px)}
+.icon-control {width:44px;height:44px;display:grid;place-items:center;color:#f6eee0}
+.icon-control svg {width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.icon-control:hover {background:#382b21;border-color:#e7ce9ca0}
 body:not(:is([data-view="welcome"],[data-view="overview"],[data-view="error"])) .preferences {display:none}
 .welcome-back {background:transparent;border:0;padding:9px 12px;text-decoration:underline}
 body[data-view="error"] .lamp {animation:none}

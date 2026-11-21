@@ -70,15 +70,13 @@
     </svg>
     <p class="window-status" role="status"></p>
     <button class="scene-cancel" type="button" data-ui="cancel" hidden>取消换景</button>
-    <div class="studio-sound" hidden><button class="view-reset" data-ui="home" type="button">回到全景</button>
-      <button data-ui="sound" class="sound-enable" type="button" hidden>点击启用声音</button>
-      <button class="sound-toggle" type="button" aria-label="静音场景音效" aria-pressed="false">静音</button>
-      <button data-ui="reset" class="prop-reset" type="button">复位道具</button>
+    <div class="studio-sound" hidden>
+      <button class="sound-toggle icon-control" type="button" aria-label="静音" title="静音" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4 6 8H3v8h3l5 4Z"/><g class="sound-waves"><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/></g><path class="sound-slash" d="m15 9 6 6m0-6-6 6" hidden/></svg></button>
+      <button data-ui-label="reset" class="prop-reset icon-control" type="button" aria-label="复位道具" title="复位道具"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2 8M3 4v6h6"/><path d="m9 12 3-2 3 2v4l-3 2-3-2Z"/></svg></button>
     </div>
     <section class="screen-ui" aria-label="电脑屏幕" data-ui-label="screen" hidden>
       <div class="desktop-controls"></div>
     </section>
-    <button data-ui="leave" class="leave" type="button" hidden>← 回到工作室</button>
-  <div class="preferences"><button class="language-global" type="button">EN</button></div></main>
+  <div class="preferences"><button class="language-global icon-control" type="button" aria-label="切换到英文" title="切换到英文"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5h12M9 3v2m4 0c-1 6-4 9-9 12M5 8c1 4 4 7 8 9m1 4 4-10 4 10m-6.5-3h5"/></svg></button></div></main>
 </body>
 </html>

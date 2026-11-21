@@ -22,7 +22,7 @@
   const t=key => words[key]?.[language==='en'?1:0] ?? key;
   function translate() {
     for(const el of document.querySelectorAll('[data-ui]')) el.textContent=t(el.dataset.ui);
-    for(const el of document.querySelectorAll('[data-ui-label]')) el.setAttribute('aria-label',t(el.dataset.uiLabel));
+    for(const el of document.querySelectorAll('[data-ui-label]')) { el.setAttribute('aria-label',t(el.dataset.uiLabel));if(el.classList.contains('icon-control'))el.title=t(el.dataset.uiLabel); }
     for(const el of document.querySelectorAll('[data-scene-status]'))el.textContent=language==='en'?`Switched to ${t(el.dataset.sceneStatus)}`:`已切换到${el.dataset.sceneStatus==='orbit'?'太空版':'赛道版'}`;
     for(const b of document.querySelectorAll('.film-track button')) b.setAttribute('aria-label',language==='en'?(b.closest('[data-work]').dataset.work==='yingyu'?'Yingyu':'Bounce'):(b.closest('[data-work]').dataset.work==='yingyu'?'映遇':'蹦动'));
     for(const el of document.querySelectorAll('[data-case-label]')) {
@@ -38,7 +38,11 @@
       e.textContent=language==='en'?`Image unavailable: ${alt}`:`图片暂时无法加载：${alt}`;
     }
     document.documentElement.lang=language;
-    document.querySelectorAll('.language-global').forEach(el=>el.textContent=language==='en'?'中文':'EN');
+    document.querySelectorAll('.language-global').forEach(el=>{
+      const label=language==='en'?'Switch to Chinese':'切换到英文';
+      el.setAttribute('aria-label',label);el.title=label;
+      if(!el.classList.contains('icon-control'))el.textContent=language==='en'?'中文':'EN';
+    });
   }
   let applying=false;
   function setLanguage(value) {
