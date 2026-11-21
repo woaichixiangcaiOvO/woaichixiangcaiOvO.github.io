@@ -17,8 +17,8 @@ body[data-view="arriving"] .welcome { pointer-events: none; }
 .enter { display: grid; justify-items: center; gap: 27px; }
 .lamp-anchor, .entry-light, .lamp { display: block; }
 .lamp { width: 14px; aspect-ratio: 1; border-radius: 50%; background: #ffcf8e; box-shadow: 0 0 25px 6px #ffaf5477; }
-body:is([data-view="loading"], [data-view="arriving"]) .welcome :is(h1, .enter-label) { opacity: 0; }
-body[data-view="error"] .enter { display: none; }
+body:is([data-view="loading"], [data-view="arriving"], [data-view="stalled"]) .welcome :is(h1, .enter-label) { opacity: 0; }
+body:is([data-view="error"], [data-view="stalled"]) .enter { display: none; }
 .loading { position: absolute; top: calc(50% + 80px); margin: 0; color: #dcc6a8; }
 .failure { text-align: center; }
 .retry { text-decoration: underline; text-underline-offset: 4px; }
@@ -65,9 +65,9 @@ body[data-view="overview"] .studio-sound {right:calc(max(20px,2.4vw) + 52px)}
 .icon-control {width:44px;height:44px;display:grid;place-items:center;color:#f6eee0}
 .icon-control svg {width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .icon-control:hover {background:#382b21;border-color:#e7ce9ca0}
-body:not(:is([data-view="welcome"],[data-view="overview"],[data-view="error"])) .preferences {display:none}
+body:not(:is([data-view="welcome"],[data-view="overview"],[data-view="error"],[data-view="stalled"])) .preferences {display:none}
 .welcome-back {background:transparent;border:0;padding:9px 12px;text-decoration:underline}
-body[data-view="error"] .lamp {animation:none}
+body:is([data-view="error"], [data-view="stalled"]) .lamp {animation:none}
 .scene-cancel{position:fixed;z-index:45;right:28px;bottom:142px;padding:8px 12px;color:#efe8da;background:#27241e;border:1px solid #8a8170;border-radius:4px}
 .scene-cancel[hidden]{display:none}
 .ipad-hit{position:fixed;padding:0;border:0;background:transparent;cursor:pointer}.ipad-highlight{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;opacity:0;overflow:visible}.ipad-highlight polygon{fill:#fff8eb09;stroke:#fffaf1;stroke-width:3.2;stroke-linejoin:round;filter:drop-shadow(0 0 3px #fffef2) drop-shadow(0 0 9px #fff5dacc) drop-shadow(0 0 18px #ffe2aa88)}.ipad-hit:is(:hover,:focus-visible)+.ipad-highlight{opacity:1}#studio[data-resetting]~.ipad-hit{visibility:hidden}

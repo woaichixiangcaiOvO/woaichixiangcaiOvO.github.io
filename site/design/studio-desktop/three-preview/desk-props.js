@@ -184,7 +184,40 @@ function makeProp(definition, parts, parent, world, rapier, matHeight, deskHeigh
   };
 }
 
-export async function createDeskProps(room, canvas, camera) {
+function loadBytes(url, onProgress, responseType) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', url);
+    request.responseType = responseType;
+    request.onprogress = event => onProgress?.(url, event.loaded, event.lengthComputable ? event.total : 0);
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) resolve(request.response);
+      else reject(new Error(`资源加载失败 ${request.status}: ${url}`));
+    };
+    request.onerror = () => reject(new Error(`资源加载失败: ${url}`));
+    request.send();
+  });
+}
+
+async function importRapier(onProgress) {
+  const rapierUrl = new URL('../../../vendor/@dimforge/rapier3d-compat/dist/rapier.mjs', import.meta.url).href;
+  try {
+    const source = await loadBytes(rapierUrl, onProgress, 'text');
+    const blobUrl = URL.createObjectURL(new Blob([source], { type: 'text/javascript' }));
+    try {
+      const module = await import(blobUrl);
+      return module.default;
+    } finally {
+      URL.revokeObjectURL(blobUrl);
+    }
+  } catch (error) {
+    console.warn('Rapier 改为直接加载模块。', error);
+    const module = await import('@dimforge/rapier3d-compat');
+    return module.default;
+  }
+}
+
+export async function createDeskProps(room, canvas, camera, onProgress) {
   const propParts = propDefinitions.map(({ parts }) => parts.map(name => room.getObjectByName(name)));
   const mat = room.getObjectByName('Desk_Leather_Mat');
   const floor = room.getObjectByName('Arch_Floor_Substrate');
@@ -194,7 +227,7 @@ export async function createDeskProps(room, canvas, camera) {
     throw new Error('GLB 中缺少桌面道具或用于碰撞的室内模型。');
   }
 
-  const { default: rapier } = await import('@dimforge/rapier3d-compat');
+  const rapier = await importRapier(onProgress);
   await rapier.init();
   const matHeight = new Box3().setFromObject(mat, true).max.y;
   const deskHeight = new Box3().setFromObject(room.getObjectByName('Desk_Main_Ash_Top'), true).max.y;

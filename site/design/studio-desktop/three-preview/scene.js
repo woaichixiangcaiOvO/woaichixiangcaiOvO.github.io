@@ -15,16 +15,49 @@ const warmBackground = 0x0c0909;
 const activeFrameInterval = 1000 / 60;
 
 const imageCache = new Map();
-async function loadImage(relativeUrl) {
+
+function loadBytes(url, onProgress, responseType) {
+  return new Promise((resolve, reject) => {
+    const request = new XMLHttpRequest();
+    request.open('GET', url);
+    request.responseType = responseType;
+    request.onprogress = event => onProgress?.(url, event.loaded, event.lengthComputable ? event.total : 0);
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) resolve(request.response);
+      else reject(new Error(`资源加载失败 ${request.status}: ${url}`));
+    };
+    request.onerror = () => reject(new Error(`资源加载失败: ${url}`));
+    request.send();
+  });
+}
+
+async function loadImage(relativeUrl, onProgress) {
   if(imageCache.has(relativeUrl))return imageCache.get(relativeUrl);
-  const promise=decodeImage(relativeUrl); imageCache.set(relativeUrl,promise);
+  const promise=decodeImage(relativeUrl, onProgress); imageCache.set(relativeUrl,promise);
   try{return await promise;}catch(error){imageCache.delete(relativeUrl);throw error;}
 }
-async function decodeImage(relativeUrl) {
-  const image = new Image();
-  image.src = new URL(relativeUrl, import.meta.url).href;
-  await image.decode();
-  return image;
+async function decodeImage(relativeUrl, onProgress) {
+  const url = new URL(relativeUrl, import.meta.url);
+  if (url.pathname.endsWith('.svg')) {
+    const image = new Image();
+    image.src = url.href;
+    await image.decode();
+    return image;
+  }
+  const blob = await loadBytes(url.href, onProgress, 'blob');
+  try {
+    return await createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' });
+  } catch {
+    return createImageBitmap(blob);
+  }
+}
+
+function loadStudioModel(onProgress) {
+  const loader = new GLTFLoader();
+  const directory = modelUrl.href.slice(0, modelUrl.href.lastIndexOf('/') + 1);
+  return loadBytes(modelUrl.href, onProgress, 'arraybuffer').then(data => new Promise((resolve, reject) => {
+    loader.parse(data, directory, resolve, reject);
+  }));
 }
 
 function screenTexture(canvas) {
@@ -35,12 +68,12 @@ function screenTexture(canvas) {
   return texture;
 }
 
-async function desktopTexture() {
+async function desktopTexture(onProgress) {
   const { width, height, iconLeft, iconSize, labelBaseline, apps } = desktopLayout;
   const { works } = window.studioCaseView;
   const [wallpaper, ...pictures] = await Promise.all([
-    loadImage('../v0.1/wallpaper.png'),
-    ...apps.map(app => loadImage(works[app.id].icon)),
+    loadImage('../v0.1/wallpaper.png', onProgress),
+    ...apps.map(app => loadImage(works[app.id].icon, onProgress)),
   ]);
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -129,7 +162,7 @@ function convexHull(points) {
   return [...edge(sorted), ...edge(sorted.reverse())];
 }
 
-export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree, placeProfile = () => {}) {
+export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree, placeProfile = () => {}, onProgress = () => {}) {
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setClearColor(warmBackground);
   renderer.toneMapping = ACESFilmicToneMapping;
@@ -145,7 +178,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   const camera = new PerspectiveCamera(28, 1, overviewNear, 95);
 
   performance.mark('studio-model-start');
-  const [{ scene: room }, wallpaper] = await Promise.all([new GLTFLoader().loadAsync(modelUrl.href), desktopTexture()]);
+  const [{ scene: room }, wallpaper] = await Promise.all([loadStudioModel(onProgress), desktopTexture(onProgress)]);
   performance.measure('studio-model-and-desktop-assets', 'studio-model-start');
   studioStage.add(room);
   const mainScreen = room.getObjectByName('Screen_yingyu_Surface');
@@ -167,7 +200,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   let deskProps;
   let deskPropsRequest;
   function prepareDeskProps() {
-    deskPropsRequest ??= createDeskProps(room, canvas, camera).then(props => {
+    deskPropsRequest ??= createDeskProps(room, canvas, camera, onProgress).then(props => {
       deskProps = props;
       renderer.shadowMap.needsUpdate = true;
     }).catch(error => {

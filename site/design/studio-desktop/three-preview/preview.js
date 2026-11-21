@@ -9,6 +9,9 @@ const entryLight = document.querySelector('.entry-light');
 const retry = document.querySelector('.retry');
 const loading = document.querySelector('.loading');
 const failure = document.querySelector('.failure');
+const failureMessage = failure.querySelector('[role="alert"]');
+let loadToken = 0;
+let loadingDetail = () => ovoPrefs.t('loading');
 const monitor = document.querySelector('.monitor-hit');
 const ipad=document.querySelector('.ipad-hit');
 const ipadHighlight=document.querySelector('.ipad-highlight polygon');
@@ -91,7 +94,7 @@ const workIcons = new Map(apps.map(({ id, y }) => {
 function show(view) {
   document.body.dataset.view = view;
   studio?.setOverviewActive(view === 'overview' && currentEntry().view === 'overview');
-  welcome.inert = !['welcome', 'loading', 'error'].includes(view);
+  welcome.inert = !['welcome', 'loading', 'error', 'stalled'].includes(view);
   monitor.hidden = view !== 'overview';
   ipad.hidden=view!=='overview';
   profileUi.hidden=view!=='profile';
@@ -100,8 +103,9 @@ function show(view) {
   soundControls.hidden = view !== 'overview';
   renderSoundControls();
   screen.hidden = view !== 'desktop';
-  loading.hidden = view !== 'loading';
-  failure.hidden = view !== 'error';
+  loading.hidden = !['loading', 'stalled'].includes(view);
+  failure.hidden = !['error', 'stalled'].includes(view);
+  failureMessage.hidden = view !== 'error';
   enter.disabled = view !== 'welcome';
 }
 
@@ -228,41 +232,86 @@ async function resetProps() {
   }
 }
 
+function setLoadingDetail(render) {
+  loadingDetail = render;
+  loading.removeAttribute('data-ui');
+  loading.textContent = render();
+}
+
 async function enterStudio() {
   if (!['welcome', 'error'].includes(document.body.dataset.view)) return;
+  const token = ++loadToken;
   audio.unlock();
   performance.mark('studio-load-start');
   show('loading');
-  loading.dataset.ui='loading';loading.textContent=ovoPrefs.t('loading');
-  const slow = setTimeout(() => { loading.dataset.ui='slow';loading.textContent = ovoPrefs.t('slow'); }, 8000);
-  let timeout;
-  const deadline = new Promise((_,reject) => { timeout=setTimeout(()=>reject(new Error('Studio load timeout')),30000); });
+  setLoadingDetail(() => ovoPrefs.t('loading'));
+  const received = new Map();
+  let lastProgress = performance.now();
+  const onProgress = (url, loaded, total = 0) => {
+    if (token !== loadToken || !Number.isFinite(loaded)) return;
+    received.set(url, { loaded, total: Number.isFinite(total) ? total : 0 });
+    lastProgress = performance.now();
+    const items = [...received.values()];
+    const loadedBytes = items.reduce((sum, item) => sum + item.loaded, 0);
+    const totalBytes = items.reduce((sum, item) => sum + item.total, 0);
+    if (document.body.dataset.view === 'stalled') show('loading');
+    setLoadingDetail(() => {
+      const amount = (loadedBytes / 1048576).toFixed(1);
+      const percent = totalBytes > 0 ? Math.min(100, Math.round(loadedBytes / totalBytes * 100)) : null;
+      const progress = percent === null ? `${amount} MB` : `${percent}% · ${amount} MB`;
+      return ovoPrefs.language === 'en'
+        ? `Preparing the studio · ${progress}`
+        : `正在准备工作室 · ${progress}`;
+    });
+  };
+  // A quiet connection can be retried, but bytes that are still arriving must not be discarded.
+  const resources = new PerformanceObserver(() => { lastProgress = performance.now(); });
+  try { resources.observe({ type: 'resource' }); } catch { /* Older browsers keep the byte progress above. */ }
+  const slow = setTimeout(() => {
+    if (token !== loadToken || received.size) return;
+    setLoadingDetail(() => ovoPrefs.t('slow'));
+  }, 8000);
+  const watch = setInterval(() => {
+    if (token !== loadToken || document.body.dataset.view !== 'loading') return;
+    if (performance.now() - lastProgress < 20000) return;
+    show('stalled');
+    setLoadingDetail(() => ovoPrefs.language === 'en'
+      ? 'No new data for a while. Still waiting, or retry.'
+      : '暂时没有新数据。仍在等待，也可以重试。');
+  }, 1000);
   try {
-    studio = await Promise.race([deadline, import('./scene.js').then(({createStudio}) => {
-      if(document.body.dataset.view!=='loading')throw new Error('Load cancelled');
+    studio = await import('./scene.js').then(({ createStudio }) => {
+      if (token !== loadToken) throw new Error('Load cancelled');
       return createStudio(
-      canvas, placeSceneTargets, points => placeTarget(screen, points),
-      initialWindow, audio, previewOptions.get('cars') === '3', points=>placeTarget(profileUi,points),
-    );})]);
-    clearTimeout(slow); clearTimeout(timeout);
+        canvas, placeSceneTargets, points => placeTarget(screen, points),
+        initialWindow, audio, previewOptions.get('cars') === '3', points => placeTarget(profileUi, points),
+        onProgress,
+      );
+    });
+    if (token !== loadToken) return;
     labelWindowPull();
     const modelReady = performance.measure('studio-model-ready', 'studio-load-start');
     canvas.dataset.modelReadyMs = String(Math.round(modelReady.duration));
     await arriveInStudio();
+    if (token !== loadToken) return;
     show('overview');
     await new Promise(requestAnimationFrame);
     const { duration } = performance.measure('studio-ready', 'studio-load-start');
     canvas.dataset.readyMs = String(Math.round(duration));
     const assetTime = performance.getEntriesByName('studio-model-and-desktop-assets').at(-1);
     const modelTransfer = performance.getEntriesByType('resource').find(entry => entry.name.endsWith('OvO_Studio_Interior.glb'));
-    canvas.dataset.assetsMs = String(Math.round(assetTime.duration));
+    canvas.dataset.assetsMs = String(Math.round(assetTime?.duration ?? 0));
     canvas.dataset.modelBytes = String(modelTransfer?.transferSize ?? 0);
     showStudioEntry(currentEntry());
   } catch (error) {
-    clearTimeout(slow); clearTimeout(timeout);
+    if (token !== loadToken) return;
     console.error(error);
     show('error');
     retry.focus();
+  } finally {
+    clearTimeout(slow);
+    clearInterval(watch);
+    resources.disconnect();
   }
 }
 
@@ -351,6 +400,7 @@ async function showStudioEntry(entry) {
 
 enter.addEventListener('click', enterStudio);
 function restart(autostart) {
+  loadToken += 1;
   const url=new URL(location.href);if(autostart)url.searchParams.set('enter','1');else url.searchParams.delete('enter');
   history.replaceState(null,'',url);location.reload();
 }
@@ -362,6 +412,7 @@ window.addEventListener('ovo-language',()=>{
   monitor.setAttribute('aria-label',ovoPrefs.t('computer'));projector.setAttribute('aria-label',ovoPrefs.t('projector'));
   for(const [id,button] of workIcons)button.setAttribute('aria-label',ovoPrefs.language==='en'?(id==='yingyu'?'Yingyu':'Bounce'):works[id].title);
   studio?.refreshLanguage();
+  if (['loading', 'stalled'].includes(document.body.dataset.view)) loading.textContent = loadingDetail();
 });
 monitor.addEventListener('click', () => {
   if (windowTransition || resetTransition || document.body.dataset.view !== 'overview') return;
