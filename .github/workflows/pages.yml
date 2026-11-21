@@ -37,10 +37,9 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the built site only
-        uses: actions/upload-pages-artifact@v5.0.0
+        uses: actions/upload-pages-artifact@v3
         with:
           path: dist
-          include-hidden-files: true
       - name: Publish
         id: deployment
         uses: actions/deploy-pages@v5.0.1
