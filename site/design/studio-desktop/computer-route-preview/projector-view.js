@@ -4,7 +4,7 @@
   const raised = 'translateY(-105%)';
   const works = {
     yingyu: { title: '映遇', icon: '../v0.2/yingyu-film.svg', source: window.yingyuCaseSource },
-    bounce: { title: '蹦动', icon: '../v0.2/bounce-puppy.png', source: window.bounceCaseSource },
+    bounce: { title: '蹦动', icon: '../v0.2/bounce-puppy.webp', source: window.bounceCaseSource },
   };
   const frameProgress = new WeakMap();
 

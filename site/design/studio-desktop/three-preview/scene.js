@@ -72,7 +72,7 @@ async function desktopTexture(onProgress) {
   const { width, height, iconLeft, iconSize, labelBaseline, apps } = desktopLayout;
   const { works } = window.studioCaseView;
   const [wallpaper, ...pictures] = await Promise.all([
-    loadImage('../v0.1/wallpaper.png', onProgress),
+    loadImage('../v0.1/wallpaper.webp', onProgress),
     ...apps.map(app => loadImage(works[app.id].icon, onProgress)),
   ]);
   const canvas = document.createElement('canvas');
