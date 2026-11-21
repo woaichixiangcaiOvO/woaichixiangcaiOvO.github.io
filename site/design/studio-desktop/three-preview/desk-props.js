@@ -139,7 +139,7 @@ function propCollider(parts, half, home, rapier) {
   return rapier.ColliderDesc.convexHull(new Float32Array(points)) ?? rapier.ColliderDesc.cuboid(half.x, half.y, half.z);
 }
 
-function makeProp(definition, parts, parent, world, rapier, matHeight, shadowMap) {
+function makeProp(definition, parts, parent, world, rapier, matHeight, deskHeight, shadowMap) {
   const bounds = new Box3();
   for (const part of parts) bounds.expandByObject(part, true);
   const home = bounds.getCenter(new Vector3());
@@ -147,6 +147,13 @@ function makeProp(definition, parts, parent, world, rapier, matHeight, shadowMap
   const resting = home.clone();
   const isMouse = definition.name === 'Desk_Mouse_Prop';
   if (isMouse) resting.y = Math.max(home.y, matHeight + half.y + .002);
+  // The source pose straddles the sloped notebook and the desk's bevel. Give
+  // the pencil a level, inset home on the clear desktop. Scene switches still
+  // preserve its current body position, and reset returns to this same home.
+  if (definition.name === 'Desk_Pencil_Prop') {
+    resting.x += .7;resting.z -= .2;
+    resting.y = deskHeight + half.y + .007;
+  }
   const body = world.createRigidBody(rapier.RigidBodyDesc.dynamic()
     .setTranslation(resting.x, resting.y, resting.z).setCcdEnabled(true)
     .setSoftCcdPrediction(.045).setAngularDamping(.7));
@@ -190,6 +197,7 @@ export async function createDeskProps(room, canvas, camera) {
   const { default: rapier } = await import('@dimforge/rapier3d-compat');
   await rapier.init();
   const matHeight = new Box3().setFromObject(mat, true).max.y;
+  const deskHeight = new Box3().setFromObject(room.getObjectByName('Desk_Main_Ash_Top'), true).max.y;
   const floorBounds = new Box3().setFromObject(floor, true);
   const planks = [];
   const plankBounds = new Box3();
@@ -213,7 +221,7 @@ export async function createDeskProps(room, canvas, camera) {
   const occluders = [...furniture, ...plantMeshes, ...planks, floor, rightWall, backWall];
   const shadowMap = shadowTexture();
   const props = propDefinitions.map((definition, index) =>
-    makeProp(definition, propParts[index], room.parent, world, rapier, matHeight, shadowMap));
+    makeProp(definition, propParts[index], room.parent, world, rapier, matHeight, deskHeight, shadowMap));
   const thinProps = props.filter(prop => prop.checkOverlap);
   const models = props.map(({ model }) => model);
   const propByMesh = new WeakMap();
