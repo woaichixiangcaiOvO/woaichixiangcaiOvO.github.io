@@ -69,9 +69,10 @@ async function packedAsset(sourcePath, directory, name) {
   const packed = packGzip(source);
   const sha256 = createHash('sha256').update(packed).digest('hex');
   const chunks = [];
-  for (let start = 0; start < packed.length; start += 65536) {
-    const bytes = packed.subarray(start, start + 65536);
-    const file = `${name}-${sha256.slice(0, 16)}-${chunks.length}.bin`;
+  const chunkSize = 128 * 1024;
+  for (let start = 0; start < packed.length; start += chunkSize) {
+    const bytes = packed.subarray(start, start + chunkSize);
+    const file = `${name}-${sha256.slice(0, 16)}-${chunkSize}-${chunks.length}.bin`;
     chunks.push({ file, bytes: bytes.length });
     await writeOutput(`${directory}/${file}`, bytes);
   }

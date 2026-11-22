@@ -257,6 +257,7 @@ async function enterStudio() {
     const modelTransfer = performance.getEntriesByType('resource').find(entry => entry.name.endsWith('OvO_Studio_Interior.glb'));
     canvas.dataset.assetsMs = String(Math.round(assetTime.duration));
     canvas.dataset.modelBytes = String(modelTransfer?.transferSize ?? 0);
+    console.info('[studio-load] '+JSON.stringify({scene:canvas.dataset.windowScene,readyMs:Number(canvas.dataset.readyMs),modelReadyMs:Number(canvas.dataset.modelReadyMs),assetsMs:Number(canvas.dataset.assetsMs),hidden:document.hidden}));
     showStudioEntry(currentEntry());
   } catch (error) {
     clearTimeout(slow); clearTimeout(timeout);
