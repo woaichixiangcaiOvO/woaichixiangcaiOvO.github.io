@@ -30,7 +30,6 @@ body[data-view="error"] .enter { display: none; }
 .screen-app:is(:hover, :focus-visible) .tile { box-shadow: 0 0 0 2px #fff9, 0 0 11px #fff5; }
 .screen-app:focus-visible .tile { outline: 2px solid #fff; outline-offset: 2px; }
 .window-status { position: fixed; width: 1px; height: 1px; margin: -1px; clip-path: inset(50%); overflow: hidden; }
-.desktop-notice { position: fixed; z-index: 20; left: 50%; bottom: 12%; transform: translateX(-50%); margin: 0; padding: 12px 20px; border-radius: 8px; background: #1c1718e8; color: #f4e8d3; pointer-events: none; }
 .studio-sound { position: fixed; right: max(20px, 2.4vw); bottom: max(20px, 3vh); display: flex; gap: 8px; }
 .studio-sound button {
   min-width: 44px; min-height: 44px; padding: 10px;

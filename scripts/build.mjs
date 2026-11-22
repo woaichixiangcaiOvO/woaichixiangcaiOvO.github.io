@@ -89,9 +89,6 @@ await writeOutput('vendor/models/model-manifest.js', `export const modelAssets =
 // Flatten the cold module waterfall without starting the unused scene's assets.
 const preload = [
   'design/studio-desktop/three-preview/scene.js',
-  ...['desktop-layout', 'monza-audio', 'desk-props', 'physics-loader', 'packed-asset',
-    'model-loader', 'shelf-motion', 'window-view', 'monza-pass', 'orbit-station']
-    .map(name => `design/studio-desktop/three-preview/${name}.js`),
   'vendor/three/build/three.module.js', 'vendor/three/build/three.core.js',
   'vendor/three/examples/jsm/loaders/GLTFLoader.js',
   'vendor/three/examples/jsm/utils/BufferGeometryUtils.js',

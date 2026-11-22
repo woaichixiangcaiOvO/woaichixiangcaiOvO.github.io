@@ -2,7 +2,6 @@ import { desktopLayout } from './desktop-layout.js';
 import { createMonzaAudio } from './monza-audio.js';
 
 const canvas = document.querySelector('#studio');
-const desktopNotice = document.querySelector('.desktop-notice');
 const enter = document.querySelector('.enter');
 const welcome = document.querySelector('.welcome');
 const lampAnchor = document.querySelector('.lamp-anchor');
@@ -90,7 +89,6 @@ const workIcons = new Map(apps.map(({ id, y }) => {
 }));
 
 function show(view) {
-  desktopNotice.hidden = true;
   document.body.dataset.view = view;
   studio?.setOverviewActive(view === 'overview' && currentEntry().view === 'overview');
   welcome.inert = !['welcome', 'loading', 'error'].includes(view);
@@ -260,7 +258,6 @@ async function enterStudio() {
     canvas.dataset.assetsMs = String(Math.round(assetTime.duration));
     canvas.dataset.modelBytes = String(modelTransfer?.transferSize ?? 0);
     console.info('[studio-load] '+JSON.stringify({scene:canvas.dataset.windowScene,readyMs:Number(canvas.dataset.readyMs),modelReadyMs:Number(canvas.dataset.modelReadyMs),assetsMs:Number(canvas.dataset.assetsMs),hidden:document.hidden}));
-    studio.prepareDesktop().catch(error => console.warn('Computer directory preparation will retry on open.', error));
     showStudioEntry(currentEntry());
   } catch (error) {
     clearTimeout(slow); clearTimeout(timeout);
@@ -342,16 +339,6 @@ async function showStudioEntry(entry) {
   if (projectorView.isOpen) projectorView.clear();
   if (previous !== 'desktop') {
     show('approaching');
-    desktopNotice.dataset.ui='desktopLoading';desktopNotice.textContent=ovoPrefs.t('desktopLoading');desktopNotice.hidden=false;
-    try { await studio.prepareDesktop(); }
-    catch(error) {
-      if(navigation!==token)return;
-      console.warn(error);studio.restoreOverview();show('overview');
-      history.replaceState({threeStudio:{view:'overview'}},'');
-      desktopNotice.dataset.ui='desktopFailed';desktopNotice.textContent=ovoPrefs.t('desktopFailed');desktopNotice.hidden=false;
-      return;
-    }
-    if(navigation!==token)return;
     if (!await studio.moveCamera(true) || navigation !== token) return;
     show('desktop');
   }
@@ -401,12 +388,12 @@ soundToggle.addEventListener('click', () => {
 });
 function exitComputer() {
   const entry=currentEntry();
-  if(backPending||!['desktop','approaching'].includes(document.body.dataset.view)||!['desktop','case'].includes(entry.view))return;
+  if(backPending||document.body.dataset.view!=='desktop'||!['desktop','case'].includes(entry.view))return;
   backPending=true;pauseStudioVideo();
   history.go(entry.view==='case'?-2:-1);
 }
 window.addEventListener('click',event=>{
-  if(!['desktop','approaching'].includes(document.body.dataset.view)||screen.contains(event.target)||event.button!==0)return;
+  if(document.body.dataset.view!=='desktop'||screen.contains(event.target)||event.button!==0)return;
   event.preventDefault();event.stopPropagation();exitComputer();
 },true);
 window.addEventListener('keydown', event => {
