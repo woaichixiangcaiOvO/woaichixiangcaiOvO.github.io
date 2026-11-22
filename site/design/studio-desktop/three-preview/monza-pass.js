@@ -4,6 +4,7 @@ import {
   WebGLRenderTarget,
 } from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { loadPackedModel } from './model-loader.js';
 
 const plateWidth = 960;
 const plateHeight = 519;
@@ -50,7 +51,7 @@ function repaintedCar(leadScene, { bodyColor, accentColor, paintWings = false })
 }
 
 export function loadMonzaCars() {
-  carsRequest ??= new GLTFLoader().loadAsync(modelUrl.href).then(({ scene }) => {
+  carsRequest ??= loadPackedModel(new GLTFLoader(), 'car', modelUrl).then(({ scene }) => {
     const blueWhite = repaintedCar(scene, { bodyColor: 0x2463df, accentColor: 0xf7f8ff, paintWings: true });
     const papaya = repaintedCar(scene, { bodyColor: 0xff851a, accentColor: 0x37383c });
     return [scene, blueWhite, papaya].map(trackCar);

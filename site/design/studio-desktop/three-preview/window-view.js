@@ -19,7 +19,7 @@ async function sceneryTexture(filename) {
   return texture;
 }
 
-async function loadScenery(id) {
+export async function loadScenery(id) {
   const orbit = id === 'orbit';
   const results = await Promise.allSettled([
     sceneryTexture(orbit ? 'window-orbit-sky.webp' : 'window-monza-clean.webp'),

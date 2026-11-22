@@ -64,17 +64,37 @@ await Promise.all([...vendors.map(copyVendor), buildCase('yingyu'), buildCase('b
 // Small, content-addressed gzip pieces avoid one large module transfer stalling entry.
 const { gzipSync: packGzip } = await import('node:zlib');
 const { createHash } = await import('node:crypto');
-const physicsSource = await readFile(path.join(root, 'node_modules/@dimforge/rapier3d-compat/dist/rapier.mjs'));
-const physicsPacked = packGzip(physicsSource);
-const physicsHash = createHash('sha256').update(physicsPacked).digest('hex');
-const chunks = [];
-for (let start = 0; start < physicsPacked.length; start += 65536) {
-  const bytes = physicsPacked.subarray(start, start + 65536);
-  const file = `rapier-${physicsHash.slice(0, 16)}-${chunks.length}.bin`;
-  chunks.push({ file, bytes: bytes.length });
-  await writeOutput(`vendor/physics/${file}`, bytes);
+async function packedAsset(sourcePath, directory, name) {
+  const source = await readFile(path.join(root, sourcePath));
+  const packed = packGzip(source);
+  const sha256 = createHash('sha256').update(packed).digest('hex');
+  const chunks = [];
+  for (let start = 0; start < packed.length; start += 65536) {
+    const bytes = packed.subarray(start, start + 65536);
+    const file = `${name}-${sha256.slice(0, 16)}-${chunks.length}.bin`;
+    chunks.push({ file, bytes: bytes.length });
+    await writeOutput(`${directory}/${file}`, bytes);
+  }
+  return {sha256, sourceBytes: source.length, chunks};
 }
-await writeOutput('vendor/physics/rapier-manifest.js', `export const rapierAsset = ${JSON.stringify({sha256:physicsHash,sourceBytes:physicsSource.length,chunks})};\n`);
+const physics = await packedAsset('node_modules/@dimforge/rapier3d-compat/dist/rapier.mjs', 'vendor/physics', 'rapier');
+await writeOutput('vendor/physics/rapier-manifest.js', `export const rapierAsset = ${JSON.stringify(physics)};\n`);
+const models = {
+  room: await packedAsset('site/models/studio_interior/v0.6/OvO_Studio_Interior.glb', 'vendor/models', 'room'),
+  car: await packedAsset('site/models/track_car/sf26/v0.2/SF-26_Preview.glb', 'vendor/models', 'car'),
+};
+await writeOutput('vendor/models/model-manifest.js', `export const modelAssets = ${JSON.stringify(models)};\n`);
+// Flatten the cold module waterfall without starting the unused scene's assets.
+const preload = [
+  'design/studio-desktop/three-preview/scene.js',
+  'vendor/three/build/three.module.js', 'vendor/three/build/three.core.js',
+  'vendor/three/examples/jsm/loaders/GLTFLoader.js',
+  'vendor/three/examples/jsm/utils/BufferGeometryUtils.js',
+  'vendor/three/examples/jsm/utils/SkeletonUtils.js',
+  'vendor/physics/rapier-manifest.js', 'vendor/models/model-manifest.js',
+];
+const home = await readFile(path.join(dist, 'index.html'), 'utf8');
+await writeOutput('index.html', home.replace('</head>', preload.map(file => `<link rel="modulepreload" href="./${file}">`).join('\n')+'\n</head>'));
 await writeOutput('.nojekyll','');
 await writeOutput('release.json',JSON.stringify({site:'OvO',commit:process.env.GITHUB_SHA??null,builtAt:new Date().toISOString()},null,2));
 console.log('Built the portfolio in dist/.');

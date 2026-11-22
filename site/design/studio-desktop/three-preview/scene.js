@@ -8,7 +8,8 @@ import { desktopLayout } from './desktop-layout.js';
 import { createDeskProps } from './desk-props.js';
 import { loadRapier } from './physics-loader.js';
 import { createShelfMotion } from './shelf-motion.js';
-import { createWindowView } from './window-view.js';
+import { createWindowView, loadScenery } from './window-view.js';
+import { loadPackedModel } from './model-loader.js';
 
 const modelUrl = new URL('../../../models/studio_interior/v0.6/OvO_Studio_Interior.glb', import.meta.url);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -133,6 +134,8 @@ function convexHull(points) {
 export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree, placeProfile = () => {}) {
   // Download physics alongside the room, rather than after its models/textures.
   loadRapier().catch(() => {}); // prepareDeskProps handles errors and retries.
+  const sceneryReady = loadScenery(initialWindow);
+  sceneryReady.catch(() => {}); // Awaited with the initial view below.
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setClearColor(warmBackground);
   renderer.toneMapping = ACESFilmicToneMapping;
@@ -148,7 +151,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   const camera = new PerspectiveCamera(28, 1, overviewNear, 95);
 
   performance.mark('studio-model-start');
-  const [{ scene: room }, wallpaper] = await Promise.all([new GLTFLoader().loadAsync(modelUrl.href), desktopTexture()]);
+  const [{ scene: room }, wallpaper] = await Promise.all([loadPackedModel(new GLTFLoader(), 'room', modelUrl), desktopTexture()]);
   performance.measure('studio-model-and-desktop-assets', 'studio-model-start');
   studioStage.add(room);
   const mainScreen = room.getObjectByName('Screen_yingyu_Surface');
@@ -180,7 +183,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     return deskPropsRequest;
   }
   const [initialScenery] = await Promise.all([
-    windowView.load(initialWindow),
+    sceneryReady,
     prepareDeskProps(),
   ]);
   windowView.select(initialWindow, initialScenery);

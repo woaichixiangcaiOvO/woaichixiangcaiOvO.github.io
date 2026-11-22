@@ -34,6 +34,8 @@ jobs:
         run: node scripts/verify-release.mjs
       - name: Verify physics loading and simulation
         run: node scripts/check-physics-loader.mjs
+      - name: Verify model loading and recovery
+        run: node scripts/check-model-loading.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the built site only
