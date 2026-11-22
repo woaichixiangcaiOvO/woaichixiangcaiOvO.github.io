@@ -1,3 +1,33 @@
+let activeDownloads = 0;
+const waitingDownloads = [];
+
+function downloadSlot(signal) {
+  signal.throwIfAborted();
+  return new Promise((resolve, reject) => {
+    const cancel = () => {
+      const index = waitingDownloads.indexOf(enter);
+      if (index !== -1) waitingDownloads.splice(index, 1);
+      reject(signal.reason);
+    };
+    const enter = () => {
+      signal.removeEventListener('abort', cancel);
+      activeDownloads++;
+      let released = false;
+      resolve(() => {
+        if (released) return;
+        released = true;
+        activeDownloads--;
+        waitingDownloads.shift()?.();
+      });
+    };
+    if (activeDownloads < 6) enter();
+    else {
+      waitingDownloads.push(enter);
+      signal.addEventListener('abort', cancel, { once: true });
+    }
+  });
+}
+
 export async function fetchPackedAsset(asset, assetBase, { fetchImpl = fetch, signal } = {}) {
   const controller = new AbortController();
   const deadline = setTimeout(() => controller.abort(new Error('Asset load timed out')), 24000);
@@ -9,6 +39,8 @@ export async function fetchPackedAsset(asset, assetBase, { fetchImpl = fetch, si
   async function download(index) {
     const part = asset.chunks[index];
     for (let attempt = 0; attempt < 2; attempt++) {
+      // The request timer starts after admission, not while queued by another asset.
+      const release = await downloadSlot(controller.signal);
       const timeout = new AbortController();
       const abort = () => timeout.abort(controller.signal.reason);
       controller.signal.addEventListener('abort', abort, { once: true });
@@ -26,6 +58,7 @@ export async function fetchPackedAsset(asset, assetBase, { fetchImpl = fetch, si
       } finally {
         clearTimeout(timer);
         controller.signal.removeEventListener('abort', abort);
+        release();
       }
     }
   }
