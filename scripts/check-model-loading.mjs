@@ -32,5 +32,8 @@ try {
     assert(parsed);
     results.push({ id, sourceBytes:data.byteLength, packedBytes:modelAssets[id].chunks.reduce((sum,p)=>sum+p.bytes,0), chunks:modelAssets[id].chunks.length, meshes:json.meshes.length, exactMatch:true });
   }
+  const wallpaper = await loadModelBytes('wallpaper');
+  assert(Buffer.from(wallpaper).equals(await readFile(new URL('../site/design/studio-desktop/v0.1/wallpaper.png', import.meta.url))));
+  results.push({id:'wallpaper',sourceBytes:wallpaper.byteLength,packedBytes:modelAssets.wallpaper.chunks.reduce((sum,p)=>sum+p.bytes,0),chunks:modelAssets.wallpaper.chunks.length,exactMatch:true});
   console.log(JSON.stringify({ recovery:true, sharedDownloads:true, models:results }, null, 2));
 } finally { globalThis.fetch = originalFetch; }

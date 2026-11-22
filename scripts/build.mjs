@@ -83,6 +83,7 @@ await writeOutput('vendor/physics/rapier-manifest.js', `export const rapierAsset
 const models = {
   room: await packedAsset('site/models/studio_interior/v0.6/OvO_Studio_Interior.glb', 'vendor/models', 'room'),
   car: await packedAsset('site/models/track_car/sf26/v0.2/SF-26_Preview.glb', 'vendor/models', 'car'),
+  wallpaper: await packedAsset('site/design/studio-desktop/v0.1/wallpaper.png', 'vendor/models', 'wallpaper'),
 };
 await writeOutput('vendor/models/model-manifest.js', `export const modelAssets = ${JSON.stringify(models)};\n`);
 // Flatten the cold module waterfall without starting the unused scene's assets.

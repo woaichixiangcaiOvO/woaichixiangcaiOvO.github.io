@@ -9,7 +9,7 @@ import { createDeskProps } from './desk-props.js';
 import { loadRapier } from './physics-loader.js';
 import { createShelfMotion } from './shelf-motion.js';
 import { createWindowView, loadScenery } from './window-view.js';
-import { loadPackedModel } from './model-loader.js';
+import { loadPackedModel, loadPackedImage } from './model-loader.js';
 
 const modelUrl = new URL('../../../models/studio_interior/v0.6/OvO_Studio_Interior.glb', import.meta.url);
 const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
@@ -41,7 +41,7 @@ async function desktopTexture() {
   const { width, height, iconLeft, iconSize, labelBaseline, apps } = desktopLayout;
   const { works } = window.studioCaseView;
   const [wallpaper, ...pictures] = await Promise.all([
-    loadImage('../v0.1/wallpaper.png'),
+    loadPackedImage('wallpaper'),
     ...apps.map(app => loadImage(works[app.id].icon)),
   ]);
   const canvas = document.createElement('canvas');
