@@ -151,7 +151,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   const camera = new PerspectiveCamera(28, 1, overviewNear, 95);
 
   performance.mark('studio-model-start');
-  const [{ scene: room }, wallpaper] = await Promise.all([loadPackedModel(new GLTFLoader(), 'room', modelUrl), desktopTexture()]);
+  const { scene: room } = await loadPackedModel(new GLTFLoader(), 'room', modelUrl);
   performance.measure('studio-model-and-desktop-assets', 'studio-model-start');
   studioStage.add(room);
   const mainScreen = room.getObjectByName('Screen_yingyu_Surface');
@@ -165,7 +165,16 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     object.castShadow = ![].concat(object.material).some(material => material.transparent);
     object.receiveShadow = true;
   });
-  mainScreen.material = new MeshBasicMaterial({ map: wallpaper, color: 0x000000, toneMapped: false });
+  mainScreen.material = new MeshBasicMaterial({ color: 0x000000, toneMapped: false });
+  let desktopRequest;
+  function prepareDesktop() {
+    desktopRequest ??= desktopTexture().then(texture => {
+      mainScreen.material.map = texture;
+      mainScreen.material.needsUpdate = true;
+      draw();
+    }).catch(error => { desktopRequest = undefined; throw error; });
+    return desktopRequest;
+  }
   tabletScreen.material = new MeshBasicMaterial({ map: signTexture(), toneMapped: false });
   const roomBounds = new Box3().setFromObject(room);
   const windowView = createWindowView(room, lightRoom(studioStage, roomBounds), audio, firstGroupHasThree);
@@ -557,5 +566,5 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   window.addEventListener('pagehide', stopScenery);
   window.addEventListener('pageshow', syncScenery);
   motionPreference.addEventListener('change', syncScenery);
-  return { arriveFromLamp, moveCamera, restoreOverview, switchWindow, setOverviewActive, resetProps, resetView, refreshLanguage };
+  return { arriveFromLamp, moveCamera, restoreOverview, switchWindow, setOverviewActive, resetProps, resetView, refreshLanguage, prepareDesktop };
 }

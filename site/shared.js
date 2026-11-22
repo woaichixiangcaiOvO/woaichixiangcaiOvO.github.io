@@ -12,6 +12,7 @@
     notFound:['找不到这个作品','Case not found'],chooseWork:['链接可能有误，请选择已有作品。','The link may be incorrect. Choose an available case.'],yingyu:['映遇','Yingyu'],bounce:['蹦动','Bounce'],
     welcome:['你好，我是OvO',"Hi, I'm OvO"], enter:['进入工作室 →','Enter studio →'], retry:['重试','Retry'],
     back:['返回欢迎页','Back to welcome'], loading:['正在准备工作室','Preparing the studio'],
+    desktopLoading:['正在准备作品目录…','Preparing the work directory…'],desktopFailed:['目录加载失败，请再次点击电脑重试。','The directory could not load. Click the computer to retry.'],
     slow:['仍在加载，请稍候…','Still loading, please wait…'], failure:['工作室未能加载，请检查网络或浏览器的 3D 支持。','The studio could not load. Check your connection or browser 3D support.'],
     home:['回到全景','Reset view'], leave:['← 回到工作室','← Back to studio'], reset:['复位道具','Reset props'],
     sound:['点击启用声音','Enable sound'], muted:['取消静音','Unmute'], mute:['静音','Mute'], unavailable:['音效不可用','Sound unavailable'],
