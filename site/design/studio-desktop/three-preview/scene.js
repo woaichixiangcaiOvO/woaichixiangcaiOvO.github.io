@@ -6,6 +6,7 @@ import {
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { desktopLayout } from './desktop-layout.js';
 import { createDeskProps } from './desk-props.js';
+import { loadRapier } from './physics-loader.js';
 import { createShelfMotion } from './shelf-motion.js';
 import { createWindowView } from './window-view.js';
 
@@ -130,6 +131,8 @@ function convexHull(points) {
 }
 
 export async function createStudio(canvas, placeSceneTargets, placeDesktop, initialWindow, audio, firstGroupHasThree, placeProfile = () => {}) {
+  // Download physics alongside the room, rather than after its models/textures.
+  loadRapier().catch(() => {}); // prepareDeskProps handles errors and retries.
   const renderer = new WebGLRenderer({ canvas, antialias: true });
   renderer.setClearColor(warmBackground);
   renderer.toneMapping = ACESFilmicToneMapping;

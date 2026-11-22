@@ -2,6 +2,7 @@ import {
   Box3, CanvasTexture, Group, MathUtils, Mesh, MeshBasicMaterial, Plane, PlaneGeometry,
   Quaternion, Raycaster, Vector2, Vector3,
 } from 'three';
+import { loadRapier } from './physics-loader.js';
 
 const fixedStep = 1 / 120;
 const gravity = -9.81;
@@ -194,8 +195,7 @@ export async function createDeskProps(room, canvas, camera) {
     throw new Error('GLB 中缺少桌面道具或用于碰撞的室内模型。');
   }
 
-  const { default: rapier } = await import('@dimforge/rapier3d-compat');
-  await rapier.init();
+  const rapier = await loadRapier();
   const matHeight = new Box3().setFromObject(mat, true).max.y;
   const deskHeight = new Box3().setFromObject(room.getObjectByName('Desk_Main_Ash_Top'), true).max.y;
   const floorBounds = new Box3().setFromObject(floor, true);

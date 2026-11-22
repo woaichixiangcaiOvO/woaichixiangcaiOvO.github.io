@@ -18,7 +18,6 @@ const vendors = [
   ['three/examples/jsm/utils/BufferGeometryUtils.js', 'three/examples/jsm/utils/BufferGeometryUtils.js'],
   ['three/examples/jsm/utils/SkeletonUtils.js', 'three/examples/jsm/utils/SkeletonUtils.js'],
   ['three/LICENSE', 'three/LICENSE'],
-  ['@dimforge/rapier3d-compat/dist/rapier.mjs', '@dimforge/rapier3d-compat/dist/rapier.mjs'],
   ['@dimforge/rapier3d-compat/LICENSE', '@dimforge/rapier3d-compat/LICENSE'],
 ];
 
@@ -62,6 +61,20 @@ async function buildCase(id) {
 }
 
 await Promise.all([...vendors.map(copyVendor), buildCase('yingyu'), buildCase('bounce')]);
+// Small, content-addressed gzip pieces avoid one large module transfer stalling entry.
+const { gzipSync: packGzip } = await import('node:zlib');
+const { createHash } = await import('node:crypto');
+const physicsSource = await readFile(path.join(root, 'node_modules/@dimforge/rapier3d-compat/dist/rapier.mjs'));
+const physicsPacked = packGzip(physicsSource);
+const physicsHash = createHash('sha256').update(physicsPacked).digest('hex');
+const chunks = [];
+for (let start = 0; start < physicsPacked.length; start += 65536) {
+  const bytes = physicsPacked.subarray(start, start + 65536);
+  const file = `rapier-${physicsHash.slice(0, 16)}-${chunks.length}.bin`;
+  chunks.push({ file, bytes: bytes.length });
+  await writeOutput(`vendor/physics/${file}`, bytes);
+}
+await writeOutput('vendor/physics/rapier-manifest.js', `export const rapierAsset = ${JSON.stringify({sha256:physicsHash,sourceBytes:physicsSource.length,chunks})};\n`);
 await writeOutput('.nojekyll','');
 await writeOutput('release.json',JSON.stringify({site:'OvO',commit:process.env.GITHUB_SHA??null,builtAt:new Date().toISOString()},null,2));
 console.log('Built the portfolio in dist/.');

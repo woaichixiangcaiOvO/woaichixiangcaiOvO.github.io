@@ -32,6 +32,8 @@ jobs:
         run: npm run build
       - name: Verify release files and local references
         run: node scripts/verify-release.mjs
+      - name: Verify physics loading and simulation
+        run: node scripts/check-physics-loader.mjs
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
       - name: Upload the built site only
