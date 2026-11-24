@@ -6,7 +6,7 @@ button { font: inherit; color: #f5dfbc; cursor: pointer; }
 button:focus-visible { outline: 2px solid #e8b47c; outline-offset: 5px; }
 #studio, .welcome, .monitor-highlight, .projector-highlight, .window-pull-highlight { position: fixed; inset: 0; width: 100%; height: 100%; }
 #studio { display: block; visibility: hidden; }
-#studio[data-prop-cursor="grab"], #studio[data-prop-cursor="grab"] ~ :is(.monitor-hit, .projector-hit) { cursor: grab; }
+#studio[data-prop-cursor="grab"], #studio[data-prop-cursor="grab"] ~ :is(.monitor-hit, .projector-hit, .ipad-hit) { cursor: grab; }
 #studio[data-prop-cursor="grabbing"] { cursor: grabbing; }
 body:is([data-view="arriving"], [data-view="overview"], [data-view="approaching"], [data-view="desktop"], [data-view="returning"], [data-view="lowering-curtain"], [data-view="raising-curtain"]) #studio { visibility: visible; }
 .welcome { display: grid; place-content: center; justify-items: center; gap: 24px; }

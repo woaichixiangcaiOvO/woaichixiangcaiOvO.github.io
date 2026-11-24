@@ -226,7 +226,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   let yaw=0, pitch=0, viewDrag;
   function resetView(){yaw=0;pitch=0;overview.position.copy(defaultPosition);draw();}
   function dragStart(e){
-    if(!overviewActive||windowSwitching||resetting||travel!==0||e.target!==canvas||e.button!==0||canvas.dataset.propCursor)return;
+    if(!overviewActive||windowSwitching||resetting||travel!==0||e.target!==canvas||e.button!==0)return;
     viewDrag={id:e.pointerId,x:e.clientX,y:e.clientY,yaw,pitch};canvas.setPointerCapture(e.pointerId);
   }
   function dragMove(e){if(!viewDrag||viewDrag.id!==e.pointerId)return;
@@ -312,6 +312,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
   function draw(updateTargets = true) {
     positionCamera();
     camera.updateMatrixWorld();
+    deskProps?.updateHover(Boolean(viewDrag));
     mainScreen.material.color.lerpColors(offColor, onColor, focusKind==='profile'?0:screenPower);
     windowView.render(renderer);
     renderer.render(scene, camera);
@@ -346,7 +347,7 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
       const sceneryChanged = !motionPreference.matches && windowView.advance(elapsedMs);
       const shelfChanged = !motionPreference.matches && shelfMotion.advance(elapsedMs);
       const propsChanged = deskProps?.advance(elapsedMs);
-      if (sceneryChanged || propsChanged || shelfChanged || !motionPreference.matches) draw(!!viewDrag);
+      if (sceneryChanged || propsChanged || shelfChanged || deskProps?.hoverNeedsUpdate || !motionPreference.matches) draw(!!viewDrag);
     }
     sceneryFrame = requestAnimationFrame(animateScenery);
   }

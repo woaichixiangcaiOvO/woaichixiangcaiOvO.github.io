@@ -1,6 +1,6 @@
 import {
-  Box3, CanvasTexture, Group, MathUtils, Mesh, MeshBasicMaterial, Plane, PlaneGeometry,
-  Quaternion, Raycaster, Vector2, Vector3,
+  BackSide, Box3, CanvasTexture, Group, MathUtils, Mesh, MeshBasicMaterial, Plane, PlaneGeometry,
+  Quaternion, Raycaster, ShaderMaterial, Vector2, Vector3,
 } from 'three';
 import { loadRapier } from './physics-loader.js';
 
@@ -9,6 +9,12 @@ const gravity = -9.81;
 const lowGravity = .055;
 const returnScale = .18;
 const up = new Vector3(0, 1, 0);
+const pickRadius = 8; // CSS pixels, independent of the canvas pixel ratio.
+const pickRings = [[4, 8], [pickRadius, 16]].map(([radius, count]) =>
+  Array.from({ length: count }, (_, index) => {
+    const angle = index * 2 * Math.PI / count;
+    return new Vector2(radius * Math.cos(angle), radius * Math.sin(angle));
+  }));
 const propDefinitions = [
   {
     name: 'Desk_Mouse_Prop', parts: ['Mouse_Shell', 'Mouse_Scroll', 'Mouse_Split'],
@@ -185,6 +191,31 @@ function makeProp(definition, parts, parent, world, rapier, matHeight, deskHeigh
   };
 }
 
+function makePropOutline() {
+  return new ShaderMaterial({
+    side: BackSide,
+    transparent: true,
+    depthWrite: false,
+    uniforms: { viewport: { value: new Vector2(1, 1) } },
+    vertexShader: `
+      uniform vec2 viewport;
+      void main() {
+        vec4 view = modelViewMatrix * vec4(position, 1.0);
+        vec4 clip = projectionMatrix * view;
+        vec4 normalClip = projectionMatrix * (view + vec4(normalize(normalMatrix * normal), 0.0));
+        vec2 screenNormal = (normalClip.xy / normalClip.w - clip.xy / clip.w) * viewport;
+        clip.xy += screenNormal / max(length(screenNormal), 0.0001) * (2.8 / viewport) * clip.w;
+        gl_Position = clip;
+      }
+    `,
+    fragmentShader: `
+      void main() {
+        gl_FragColor = vec4(1.0, 0.88, 0.73, 0.48);
+      }
+    `,
+  });
+}
+
 export async function createDeskProps(room, canvas, camera) {
   const propParts = propDefinitions.map(({ parts }) => parts.map(name => room.getObjectByName(name)));
   const mat = room.getObjectByName('Desk_Leather_Mat');
@@ -223,14 +254,24 @@ export async function createDeskProps(room, canvas, camera) {
   const props = propDefinitions.map((definition, index) =>
     makeProp(definition, propParts[index], room.parent, world, rapier, matHeight, deskHeight, shadowMap));
   const thinProps = props.filter(prop => prop.checkOverlap);
-  const models = props.map(({ model }) => model);
   const propByMesh = new WeakMap();
+  const outlineMaterial = makePropOutline();
   for (const prop of props) {
-    prop.model.traverse(mesh => { if (mesh.isMesh) propByMesh.set(mesh, prop); });
+    prop.meshes = [];
+    prop.model.traverse(mesh => { if (mesh.isMesh) prop.meshes.push(mesh); });
+    prop.pickBoundRadius = prop.half.length();
+    prop.outlines = prop.meshes.map(mesh => {
+      propByMesh.set(mesh, prop);
+      const outline = new Mesh(mesh.geometry, outlineMaterial);
+      outline.visible = false;
+      mesh.add(outline);
+      return outline;
+    });
     prop.targetMin = low.clone().add(prop.half).addScalar(.008);
     prop.targetMax = high.clone().sub(prop.half).addScalar(-.008);
   }
   const pointer = new Vector2();
+  const worldCenter = new Vector3();
   const ray = new Raycaster();
   const dragPlane = new Plane();
   const cameraDirection = new Vector3();
@@ -248,36 +289,94 @@ export async function createDeskProps(room, canvas, camera) {
   let remaining = 0;
   let grab;
   let grabbedPointerId;
+  let mouse;
+  let hoveredProp;
+  let hoverNeedsUpdate = false;
 
-  function setRay(event) {
-    const rect = canvas.getBoundingClientRect();
-    pointer.set(2 * (event.clientX - rect.left) / rect.width - 1, 1 - 2 * (event.clientY - rect.top) / rect.height);
+  function setRay(x, y, rect) {
+    pointer.set(2 * (x - rect.left) / rect.width - 1, 1 - 2 * (y - rect.top) / rect.height);
     ray.setFromCamera(pointer, camera);
   }
 
-  function hitProp(event) {
-    if (event.target !== canvas && !event.target.closest?.('.monitor-hit, .projector-hit, .ipad-hit')) return null;
-    setRay(event);
-    const hit = ray.intersectObjects(models, true)[0];
+  function visibleHit(meshes) {
+    const hit = ray.intersectObjects(meshes, false)[0];
     if (!hit) return null;
     const occluder = ray.intersectObjects(occluders, false)[0];
     return !occluder || hit.distance < occluder.distance ? hit : null;
+  }
+
+  function hitProp(x, y, target, rect) {
+    if (target !== canvas && !target?.closest?.('.monitor-hit, .projector-hit, .ipad-hit')) return null;
+    if (!rect.width || !rect.height) return null;
+    setRay(x, y, rect);
+    const anglePerPixel = 2 * Math.tan(MathUtils.degToRad(camera.getEffectiveFOV()) / 2) / rect.height;
+    const meshes = [];
+    for (const prop of props) {
+      prop.model.getWorldPosition(worldCenter);
+      const distance = ray.ray.origin.distanceTo(worldCenter) + prop.pickBoundRadius;
+      const margin = distance * anglePerPixel * pickRadius;
+      if (ray.ray.distanceSqToPoint(worldCenter) > (prop.pickBoundRadius + margin) ** 2) continue;
+      prop.model.updateMatrixWorld(true);
+      meshes.push(...prop.meshes);
+    }
+    if (!meshes.length) return null;
+    const direct = visibleHit(meshes);
+    if (direct || target !== canvas) return direct;
+
+    // Keep the screen/projector controls clickable and test occlusion on each nearby ray.
+    for (const ring of pickRings) {
+      let nearest;
+      for (const offset of ring) {
+        setRay(x + offset.x, y + offset.y, rect);
+        const hit = visibleHit(meshes);
+        if (hit && (!nearest || hit.distance < nearest.distance)) nearest = hit;
+      }
+      if (nearest) return nearest;
+    }
+    return null;
+  }
+
+  function setHover(prop) {
+    if (hoveredProp === prop) return;
+    hoveredProp?.outlines.forEach(outline => { outline.visible = false; });
+    hoveredProp = prop;
+    hoveredProp?.outlines.forEach(outline => { outline.visible = true; });
+  }
+
+  function updateHover(viewDragging) {
+    hoverNeedsUpdate = false;
+    if (!interactive) return;
+    const rect = canvas.getBoundingClientRect();
+    outlineMaterial.uniforms.viewport.value.set(rect.width, rect.height);
+    if (grab) return;
+    const hit = !viewDragging && mouse
+      ? hitProp(mouse.x, mouse.y, document.elementFromPoint(mouse.x, mouse.y), rect)
+      : null;
+    setHover(hit ? propByMesh.get(hit.object) : undefined);
+    if (hit) canvas.dataset.propCursor = 'grab';
+    else delete canvas.dataset.propCursor;
   }
 
   function startDrag(event) {
     if (grab || event.button !== 0 || event.pointerType !== 'mouse') return;
     grabbedPointerId = undefined;
     if (!interactive) return;
-    const hit = hitProp(event);
+    const rect = canvas.getBoundingClientRect();
+    const hit = hitProp(event.clientX, event.clientY, event.target, rect);
     if (!hit) return;
-    event.preventDefault();
-    event.stopPropagation();
     const prop = propByMesh.get(hit.object);
     const position = new Vector3().copy(prop.body.translation());
     dragPlane.setFromNormalAndCoplanarPoint(camera.getWorldDirection(cameraDirection), hit.point);
+    // Use the actual pointer ray as the anchor so an assisted grab never snaps to a sampled pixel.
+    setRay(event.clientX, event.clientY, rect);
+    if (!ray.ray.intersectPlane(dragPlane, dragPoint)) return;
+    event.preventDefault();
+    event.stopPropagation();
     grab = {
-      id: event.pointerId, prop, target: position, offset: position.clone().sub(hit.point), heading: prop.heading.clone(),
+      id: event.pointerId, prop, target: position, offset: position.clone().sub(dragPoint), heading: prop.heading.clone(),
     };
+    setHover(prop);
+    hoverNeedsUpdate = true;
     grabbedPointerId = event.pointerId;
     canvas.setPointerCapture(event.pointerId);
     canvas.dataset.propCursor = 'grabbing';
@@ -286,13 +385,10 @@ export async function createDeskProps(room, canvas, camera) {
 
   function movePointer(event) {
     if (!interactive || event.pointerType !== 'mouse') return;
-    if (!grab) {
-      if (hitProp(event)) canvas.dataset.propCursor = 'grab';
-      else delete canvas.dataset.propCursor;
-      return;
-    }
+    mouse = { x: event.clientX, y: event.clientY };
+    if (!grab) { hoverNeedsUpdate = true; return; }
     if (event.pointerId !== grab.id) return;
-    setRay(event);
+    setRay(mouse.x, mouse.y, canvas.getBoundingClientRect());
     if (ray.ray.intersectPlane(dragPlane, dragPoint)) {
       dragPoint.add(grab.offset).clamp(grab.prop.targetMin, grab.prop.targetMax);
       direction.copy(dragPoint).sub(grab.target);
@@ -308,6 +404,7 @@ export async function createDeskProps(room, canvas, camera) {
     if (driftOnRelease) prop.heading.copy(grab.heading);
     grab = undefined;
     delete canvas.dataset.propCursor;
+    hoverNeedsUpdate = true;
     if (canvas.hasPointerCapture(pointerId)) canvas.releasePointerCapture(pointerId);
     velocity.copy(prop.heading).multiplyScalar(driftOnRelease ? prop.speed : 0);
     prop.body.setLinvel(velocity, true);
@@ -318,6 +415,7 @@ export async function createDeskProps(room, canvas, camera) {
     interactive = active;
     if (interactive) return;
     release(false);
+    setHover(undefined);
     delete canvas.dataset.propCursor;
   }
 
@@ -520,8 +618,19 @@ export async function createDeskProps(room, canvas, camera) {
     event.stopImmediatePropagation();
   }, true);
   canvas.addEventListener('lostpointercapture', event => { if (event.pointerId === grab?.id) release(false); });
-  window.addEventListener('blur', () => release(false));
+  function clearPointer() {
+    mouse = undefined;
+    hoverNeedsUpdate = true;
+  }
+  window.addEventListener('pointerout', event => {
+    if (event.pointerType === 'mouse' && !event.relatedTarget) clearPointer();
+  });
+  window.addEventListener('blur', () => { clearPointer(); release(false); });
   props.forEach(updateShadow);
 
-  return { setMode, setInteractive, advance, planReset, drawReset, reset, get isDragging() { return Boolean(grab); } };
+  return {
+    setMode, setInteractive, advance, planReset, drawReset, reset, updateHover,
+    get hoverNeedsUpdate() { return hoverNeedsUpdate; },
+    get isDragging() { return Boolean(grab); },
+  };
 }
