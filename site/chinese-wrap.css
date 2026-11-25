@@ -1,0 +1,8 @@
+html:lang(zh) {
+  line-break: strict;
+  text-wrap-style: pretty;
+}
+
+.keep-chinese {
+  white-space: nowrap;
+}

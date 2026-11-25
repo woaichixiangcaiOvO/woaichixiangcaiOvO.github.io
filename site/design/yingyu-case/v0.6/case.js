@@ -81,6 +81,7 @@ for (const button of languageButtons) {
     });
     for (const option of languageButtons) option.setAttribute('aria-pressed', String(option === button));
     guide.hidden = !english;
+    window.ovoChineseWrap.apply(document.body);
     if (scrollPosition > 0 && section) scrollArea.scrollBy(0, section.getBoundingClientRect().top - offset);
   });
 }

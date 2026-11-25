@@ -3,24 +3,33 @@ function prepareText(element, segmenter, start = 0, step = 14, spread = 280) {
   const nodes = [];
   while (walker.nextNode()) nodes.push(walker.currentNode);
 
-  const parts = nodes.map(node => Array.from(segmenter.segment(node.data), item => item.segment));
-  const count = parts.flat().filter(glyph => !/^\s+$/u.test(glyph)).length;
+  const wrap = window.ovoChineseWrap;
+  const parts = nodes.map(node => wrap.groups(node.data).map(text => ({
+    text, glyphs: Array.from(segmenter.segment(text), item => item.segment),
+  })));
+  const count = parts.flat().flatMap(part => part.glyphs).filter(glyph => !/^\s+$/u.test(glyph)).length;
   const interval = Math.min(step, spread / Math.max(1, count - 1));
   let index = 0;
 
   nodes.forEach((node, position) => {
     const fragment = document.createDocumentFragment();
-    for (const glyph of parts[position]) {
-      if (/^\s+$/u.test(glyph)) {
-        fragment.append(glyph);
-      } else {
+    for (const { text, glyphs } of parts[position]) {
+      const group = wrap.keepTogether(text);
+      const host = group.nodeType === Node.ELEMENT_NODE ? group : fragment;
+      if (host === group) group.replaceChildren();
+      for (const glyph of glyphs) {
+        if (/^\s+$/u.test(glyph)) {
+          host.append(glyph);
+          continue;
+        }
         const span = document.createElement('span');
         span.className = 'text-glyph';
         span.style.setProperty('--glyph-delay', `${start + index * interval}ms`);
         span.textContent = glyph;
-        fragment.append(span);
+        host.append(span);
         index++;
       }
+      if (host === group) fragment.append(group);
     }
     node.replaceWith(fragment);
   });
@@ -107,6 +116,7 @@ function setLanguage(language) {
   }
   for (const option of options) option.setAttribute('aria-pressed', String(option.dataset.language === language));
   preparePage(language);
+  window.ovoChineseWrap.apply(document.body);
   if (anchor) scrollBy({ top: anchor.getBoundingClientRect().top - oldTop, behavior: 'instant' });
 }
 

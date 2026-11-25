@@ -2,12 +2,42 @@
 const readingRoot=document.querySelector('.pages');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const revealed=new WeakSet();let observer;
-function splitLines(el){
-  const text=el.textContent;el.replaceChildren(document.createTextNode(text));
-  const node=el.firstChild;if(!node)return;
-  const range=document.createRange();const lines=[];let offset=0,lastTop;
-  for(const char of text){range.setStart(node,offset);offset+=char.length;range.setEnd(node,offset);const top=Math.round(range.getBoundingClientRect().top);if(lastTop===undefined||Math.abs(top-lastTop)>2){lines.push('');lastTop=top;}lines[lines.length-1]+=char;}
-  el.replaceChildren(...lines.map((line,index)=>{const mask=document.createElement('span');mask.className='line-mask';const body=document.createElement('span');body.className='line-body';body.style.setProperty('--line-delay',`${index*95}ms`);body.textContent=line;mask.append(body);return mask;}));
+function splitLines(el) {
+  // Measure the same nonbreaking groups that the finished page uses.
+  const text = el.textContent;
+  el.replaceChildren(document.createTextNode(text));
+  window.ovoChineseWrap.apply(el);
+  if (!el.getClientRects().length) return;
+
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  const range = document.createRange();
+  const lines = [];
+  let lastTop;
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    let offset = 0;
+    for (const glyph of node.data) {
+      range.setStart(node, offset);
+      offset += glyph.length;
+      range.setEnd(node, offset);
+      const bounds = range.getBoundingClientRect();
+      if (!lines.length || (bounds.width && Math.abs(bounds.top - lastTop) > 2)) {
+        lines.push('');
+        lastTop = bounds.top;
+      }
+      lines[lines.length - 1] += glyph;
+    }
+  }
+  el.replaceChildren(...lines.map((line, index) => {
+    const mask = document.createElement('span');
+    mask.className = 'line-mask';
+    const body = document.createElement('span');
+    body.className = 'line-body';
+    body.style.setProperty('--line-delay', `${index * 95}ms`);
+    body.textContent = line;
+    mask.append(body);
+    return mask;
+  }));
 }
 window.prepareProfileMotion=()=>{
   observer?.disconnect();
@@ -21,4 +51,5 @@ window.prepareProfileMotion=()=>{
 };
 let resizeFrame;addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(window.prepareProfileMotion);});
 reduced.addEventListener('change',window.prepareProfileMotion);
+document.fonts?.ready.then(window.prepareProfileMotion);
 requestAnimationFrame(window.prepareProfileMotion);
