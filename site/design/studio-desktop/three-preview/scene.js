@@ -422,7 +422,9 @@ export async function createStudio(canvas, placeSceneTargets, placeDesktop, init
     const overviewSize = Math.max(7.32, 11.1 / camera.aspect);
     overview.fov = MathUtils.radToDeg(2 * Math.atan(overviewSize / (2 * overview.position.distanceTo(overview.target))));
     const verticalTangent = Math.tan(MathUtils.degToRad(desktop.fov / 2));
-    const frameDistance = Math.max(screenSize.x / (.94 * 2 * verticalTangent * camera.aspect), screenSize.y / (.88 * 2 * verticalTangent));
+    const desktopWidth = Math.min(.98, 1 - 24 / Math.max(48, innerWidth));
+    const desktopHeight = Math.min(.96, 1 - 24 / Math.max(48, innerHeight));
+    const frameDistance = Math.max(screenSize.x / (desktopWidth * 2 * verticalTangent * camera.aspect), screenSize.y / (desktopHeight * 2 * verticalTangent));
     desktop.position.copy(screenCenter).addScaledVector(screenNormal, frameDistance);
     const tabletDistance=Math.max(tabletSize.x/(.88*2*verticalTangent*camera.aspect),tabletSize.y/(.82*2*verticalTangent));
     profileView.position.copy(tabletCenter).addScaledVector(tabletNormal,tabletDistance);
